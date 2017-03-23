@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # import struct as st
-# import numpy as np
+import numpy as np
 import pandas as pd
 import StockAccount as sa
 
@@ -62,53 +62,57 @@ def sellPolicy_downfromhight(highpoint, currentprice, downrate):
     return False
 
 
+def runBackTrace(dataframe):
+    predays = 3
+    i = predays
+
+    while i < len(dataframe.index):
+        todayopen = dataframe.iloc[i, 0]
+        todayclose = dataframe.iloc[i, 1]
+
+        if mysa.status:  # we can sell
+            if mysa.highestpoint < max(todayopen, todayclose):
+                mysa.highestpoint = max(todayopen, todayclose)
+            issell = True
+            t = i
+            if sellPolicy_stoploss(mysa.buypoint, todayopen, mysa.stoplossrate):  # cut loss policy
+                print('Failed:sell', dataframe.index[i], end='')
+                i = i + predays - 1  # if sell out today for cut loss, we will not buy in n(predays) days
+            elif sellPolicy_getprofits(mysa.buypoint, todayopen, mysa.stopearnrate):  # sell for getting profits
+                print('>>>SUCCESS:sell', dataframe.index[i], end='')
+                i = i + predays * 5  # if sell out today for cut earning, we will not buy in the next day
+            elif sellPolicy_downfromhight(mysa.highestpoint, todayopen, mysa.turndownrate):
+                print('FORCE:sell ', dataframe.index[i], end='')
+            else:
+                issell = False
+
+            if issell:
+                mysa.sellAction((todayopen+todayclose)/2)
+                dataframe.iloc[t,4] = (todayopen+todayclose)/2
+                print('--', todayopen, mysa.moneyihave)
+        else:  # we can buy
+            L1 = dataframe.iloc[i - predays:i, 0]
+            L2 = dataframe.iloc[i - predays:i, 1]
+            if buyPolicy_upfewdays(L1, L2):  # buy policy
+                mysa.buyAction(mysa.moneyihave, (todayopen+todayclose)/2)
+                dataframe.iloc[i, 3] = (todayopen+todayclose)/2
+                print('buy ', dataframe.index[i], todayopen, mysa.stocks * todayopen + mysa.moneyihave)
+        i = i + 1
+    return dataframe.iloc[i - 1, 0] * mysa.stocks + mysa.moneyihave
+
+
 '''
 pathdir='E:\\github\\my1stproj'
 targetDir='E:\\github\\my1stproj'
 listfile=os.listdir(pathdir)
 day2csv_data(pathdir,'sh600000.day',targetDir)
 '''
-originData = readDailyData('sh#603588.txt', '2016-01-01', '2017-01-01')
-# print(originData.iloc[:,0]) # first column
-# print(originData.index[0:3])
-# print(originData.head())
-
-predays = 3
-i = predays
-while i < len(originData.index):
-    todayopen = originData.iloc[i, 0]
-    todayclose = originData.iloc[i, 1]
-
-    if mysa.status:  # we can sell
-        if mysa.highestpoint < max(todayopen, todayclose):
-            mysa.highestpoint = max(todayopen, todayclose)
-        issell = True
-        if sellPolicy_stoploss(mysa.buypoint, todayopen, mysa.stoplossrate):  # cut loss policy
-            print('Failed:sell', originData.index[i], end='')
-            i = i + predays - 1  # if sell out today for cut loss, we will not buy in n(predays) days
-        elif sellPolicy_getprofits(mysa.buypoint, todayopen, mysa.stopearnrate):  # sell for getting profits
-            print('>>>SUCCESS:sell', originData.index[i], end='')
-            i = i + predays * 5  # if sell out today for cut earning, we will not buy in the next day
-        elif sellPolicy_downfromhight(mysa.highestpoint, todayopen, mysa.turndownrate):
-            print('FORCE:sell ', originData.index[i], end='')
-        else:
-            issell = False
-
-        if issell:
-            mysa.sellAction(todayopen)
-            print('--',todayopen, mysa.moneyihave)
-    else:  # we can buy
-        L1 = originData.iloc[i - predays:i, 0]
-        L2 = originData.iloc[i - predays:i, 1]
-        if buyPolicy_upfewdays(L1, L2):  # buy policy
-            mysa.buyAction(mysa.moneyihave, todayopen)
-            print('buy ', originData.index[i],todayopen, mysa.stocks*todayopen+mysa.moneyihave)
-
-    i = i + 1
-
-# 计算盈亏情况
-incomes = mysa.moneyihave
-if mysa.status:
-    incomes = originData.iloc[i - 1, 0] * mysa.stocks + incomes
-
-print('My profits = ', incomes)
+# originData = readDailyData('sh#603588.txt', '2016/01/01', '2017/01/01')
+# originData['buy'] = 0.0
+# originData['sell'] = 0.0
+# incomes = runBackTrace(originData)
+#
+# # print(originData.iloc[:,0]) # first column
+# # print(originData.index[0:3])
+# print(originData.head(30))
+# print('My profits = ', incomes)

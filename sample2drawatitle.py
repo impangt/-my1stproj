@@ -25,7 +25,7 @@ import pandas as pd
 # ax1 = plt.subplot(211) # 在图表2中创建子图1
 # ax2 = plt.subplot(212) # 在图表2中创建子图2
 x = np.linspace(0, 3, 100)
-for i in range(3):
+for i in range(5):
    # plt.figure(1)  #❶ # 选择图表1
     plt.plot(x, np.exp(i*x/3))
     # plt.sca(ax1)   #❷ # 选择图表2的子图1
