@@ -1,3 +1,4 @@
+#!/usr/bin/python
 
 class StockAccount:
     def __init__(self, inimoney=10000.0):

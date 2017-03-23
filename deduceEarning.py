@@ -1,6 +1,7 @@
 #!/usr/bin/python
-import struct as st
-import numpy as np
+
+# import struct as st
+# import numpy as np
 import pandas as pd
 import StockAccount as sa
 
