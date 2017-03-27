@@ -1,33 +1,43 @@
-import matplotlib.pyplot as plt
-import numpy as np
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QFileDialog
 
-# create some data to use for the plot
-dt = 0.001
-t = np.arange(0.0, 10.0, dt)
-r = np.exp(-t[:1000]/0.05)               # impulse response
-x = np.random.randn(len(t))
-s = np.convolve(x, r)[:len(x)]*dt  # colored noise
 
-# the main axes is subplot(111) by default
-plt.plot(t, s)
-plt.axis([0, 1, 1.1*np.amin(s), 2*np.amax(s)])
-plt.xlabel('time (s)')
-plt.ylabel('current (nA)')
-plt.title('Gaussian colored noise')
+class MyWindow(QtWidgets.QWidget):
+    def __init__(self):
+        super(MyWindow, self).__init__()
+        self.myButton = QtWidgets.QPushButton(self)
+        self.myButton.setObjectName("myButton")
+        self.myButton.setText("Open")
+        self.myButton.clicked.connect(self.msg)
 
-# this is an inset axes over the main axes
-a = plt.axes([.65, .6, .2, .2], axisbg='y')
-n, bins, patches = plt.hist(s, 400, normed=1)
-plt.title('Probability')
-plt.xticks([])
-plt.yticks([])
+    def msg(self):
+        # directory1 = QFileDialog.getExistingDirectory(self,
+        #                                               "选取文件夹",
+        #                                               "C:/")  # 起始路径
+        # print(directory1)
 
-# this is another inset axes over the main axes
-b = plt.axes([0.1, 0.4, .4, .4])
-plt.plot(t[:len(r)], r)
-plt.title('Impulse response')
-plt.xlim(0, 0.2)
-plt.xticks([])
-plt.yticks([])
+        fileName1, filetype = QFileDialog.getOpenFileName(self,
+                                                          "选取文件",
+                                                          "C:/",
+                                                          "All Files (*);;Text Files (*.txt)")  # 设置文件扩展名过滤,注意用双分号间隔
+        print('file name is: ',fileName1,'filetype is: ', filetype)
+        #
+        # files, ok1 = QFileDialog.getOpenFileNames(self,
+        #                                           "多文件选择",
+        #                                           "C:/",
+        #                                           "All Files (*);;Text Files (*.txt)")
+        # print(files,'----', ok1)
+        #
+        # fileName2, ok2 = QFileDialog.getSaveFileName(self,
+        #                                              "文件保存",
+        #                                              "C:/",
+        #                                              "All Files (*);;Text Files (*.txt)")
 
-plt.show()
+
+if __name__ == "__main__":
+    import sys
+
+    app = QtWidgets.QApplication(sys.argv)
+    myshow = MyWindow()
+    myshow.show()
+    sys.exit(app.exec_())
