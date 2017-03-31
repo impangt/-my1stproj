@@ -33,8 +33,8 @@ for n in range(0, length):
         l4y.append(od.iloc[n, 4])
 
 #draw the main figure first
-plt.xticks(np.arange(0, length, 1), l2, rotation=60)  # show partial labels
-plt.plot(x, y, 'b')
+plt.xticks(np.arange(0, length, 10), l2, rotation=60)  # show partial labels
+###plt.plot(x, y, 'b')
 plt.ylabel('day price')
 plt.plot(x, y, color='k') #, linestyle='dashed', marker='o')
 #draw buy points
