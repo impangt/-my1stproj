@@ -95,24 +95,18 @@ def runBackTrace(dataframe):
             L2 = dataframe.iloc[i - predays:i, 1]
             if buyPolicy_upfewdays(L1, L2):  # buy policy
                 mysa.buyAction(mysa.moneyihave, (todayopen+todayclose)/2)
-                dataframe.iloc[i, 3] = (todayopen+todayclose)/2
-                print('buy ', dataframe.index[i], todayopen, mysa.stocks * todayopen + mysa.moneyihave)
+                dataframe.iloc[i][ 3] = (todayopen+todayclose)/2
+                print('buy ', dataframe.index[i], todayopen, mysa.stocks * (todayopen+todayclose)/2 + mysa.moneyihave)
         i = i + 1
     return dataframe.iloc[i - 1, 0] * mysa.stocks + mysa.moneyihave
 
+originData = readDailyData('sh#603588.txt', '2016/01/01', '2017/01/01')
+originData['buy'] = 0.0
+originData['sell'] = 0.0
+dataframe = originData.iloc[10:28,]
+incomes = runBackTrace(dataframe)
 
-'''
-pathdir='E:\\github\\my1stproj'
-targetDir='E:\\github\\my1stproj'
-listfile=os.listdir(pathdir)
-day2csv_data(pathdir,'sh600000.day',targetDir)
-'''
-# originData = readDailyData('sh#603588.txt', '2016/01/01', '2017/01/01')
-# originData['buy'] = 0.0
-# originData['sell'] = 0.0
-# incomes = runBackTrace(originData)
-#
-# # print(originData.iloc[:,0]) # first column
-# # print(originData.index[0:3])
-# print(originData.head(30))
-# print('My profits = ', incomes)
+# print(originData.iloc[:,0]) # first column
+# print(originData.index[0:3])
+print(originData.head(30))
+print('My profits = ', incomes)

@@ -109,7 +109,6 @@ class ShowWindow(QtWidgets.QDialog):
         self.showindicator = True
 
 
-
     def home(self):
         plt.clf()
         self.zoomidx = 1
