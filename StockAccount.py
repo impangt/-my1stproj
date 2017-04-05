@@ -35,3 +35,13 @@ class StockAccount:
             self.buypoint = 0
             self.status = False
         return self.status
+
+    def accountIni(self):
+        self.moneyihave = 10000
+        self.stocks = 0 # 持有数量
+        self.buypoint = 0.0
+        self.highestpoint = 0.0
+        self.incomes = 0.0
+        self.taxes = 0.0
+        self.profits = 0.0
+        self.status = False  # 0:empty , 1:hold

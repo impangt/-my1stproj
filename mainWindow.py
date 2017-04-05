@@ -113,15 +113,16 @@ class ApplicationWindow(QMainWindow):
                                                           "All Files (*);;Text Files (*.txt)")  # 设置文件扩展名过滤,注意用双分号间隔
         if self.targetDir != '' :
             # read the file data into memory
-            self.dataframe = de.readDailyData(self.targetDir, '2016/01/01', '2017/04/11')
+            self.dataframe = de.readDailyData(self.targetDir, '2016/01/01', '2017/03/09')
             self.dataframe['buy'] = 0.0
             self.dataframe['sell'] = 0.0
 
         # set the dateEdit controller
-        self.setEditDate(self.dataframe.index[0],self.dataframe.index[-1])
+        self.setEditDate(self.dataframe.index[0], self.dataframe.index[-1])
 
         self.originaldatalength = len(self.dataframe.index)
         self.slidewindowsize = self.originaldatalength
+        self.ui.hslider.setRange(0, 0)
         print("origin length is ", self.slidewindowsize)
 
         #draw the figure
@@ -133,8 +134,8 @@ class ApplicationWindow(QMainWindow):
             view_dateframe = self.dataframe.iloc[self.view_start:view_lenth-1, ]
             self.mycanvas.drawFigure(view_dateframe)
             self.slidewindowsize = view_lenth
-            self.ui.hslider.setRange(self.view_start, self.originaldatalength-view_lenth)
-            # set the dateEdit controller
+            self.ui.hslider.setRange(0, self.originaldatalength-view_lenth)
+             # set the dateEdit controller
             self.setEditDate(view_dateframe.index[0],view_dateframe.index[-1])
 
     def zoomoutButtonClicked(self):
@@ -144,10 +145,9 @@ class ApplicationWindow(QMainWindow):
             view_dateframe = self.dataframe.iloc[self.view_start:view_lenth, ]
             self.mycanvas.drawFigure(view_dateframe)
             self.slidewindowsize = view_lenth
-            self.ui.hslider.setRange(self.view_start, self.originaldatalength-view_lenth)
+            self.ui.hslider.setRange(0, self.originaldatalength-view_lenth)
             # set the dateEdit controller
             self.setEditDate(view_dateframe.index[0],view_dateframe.index[-1])
-
 
     def applyButtonClicked(self):
         reply = QMessageBox.information(self,
@@ -156,15 +156,19 @@ class ApplicationWindow(QMainWindow):
                                         QMessageBox.Ok) #.Yes | QMessageBox.No)
 
     def lookbackButtonClicked(self):
-        view_dateframe = self.dataframe.iloc[self.view_start:self.view_start+self.slidewindowsize, ]
-        de.runBackTrace(view_dateframe)
+        print('select from ',  self.dataframe.index[self.view_start], ' to ', self.dataframe.index[self.view_start+self.slidewindowsize-1], self.slidewindowsize)
+        view_dateframe = self.dataframe.iloc[self.view_start:self.view_start+self.slidewindowsize-1, ]
+        incomes = de.runBackTrace(view_dateframe)
         self.mycanvas.drawIndicator(view_dateframe)
+        # print('look back', view_dateframe.head(10))
+        print('---current income = ', incomes)
 
     def slideWindowZoom(self):
         pass
 
     def windowSliding(self):
         pos = self.ui.hslider.value()
+        print('slider pos = ',pos)
         if pos+self.slidewindowsize <= self.originaldatalength+1:
             view_dateframe = self.dataframe.iloc[pos:pos+self.slidewindowsize, ]
             self.mycanvas.drawFigure(view_dateframe)

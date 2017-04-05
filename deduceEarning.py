@@ -65,7 +65,6 @@ def sellPolicy_downfromhight(highpoint, currentprice, downrate):
 def runBackTrace(dataframe):
     predays = 3
     i = predays
-
     while i < len(dataframe.index):
         todayopen = dataframe.iloc[i, 0]
         todayclose = dataframe.iloc[i, 1]
@@ -85,28 +84,33 @@ def runBackTrace(dataframe):
                 print('FORCE:sell ', dataframe.index[i], end='')
             else:
                 issell = False
-
             if issell:
                 mysa.sellAction((todayopen+todayclose)/2)
                 dataframe.iloc[t,4] = (todayopen+todayclose)/2
+                mysa.status = False
                 print('--', todayopen, mysa.moneyihave)
         else:  # we can buy
             L1 = dataframe.iloc[i - predays:i, 0]
             L2 = dataframe.iloc[i - predays:i, 1]
             if buyPolicy_upfewdays(L1, L2):  # buy policy
                 mysa.buyAction(mysa.moneyihave, (todayopen+todayclose)/2)
-                dataframe.iloc[i][ 3] = (todayopen+todayclose)/2
-                print('buy ', dataframe.index[i], todayopen, mysa.stocks * (todayopen+todayclose)/2 + mysa.moneyihave)
+                # dataframe.iloc[i,3] = (todayopen+todayclose)/2
+                dayindex = dataframe.index[i]
+                dataframe.at[dayindex, 'buy'] = (todayopen + todayclose) / 2
+                mysa.status = True
+                print('buy ', dayindex, todayopen, mysa.stocks * (todayopen+todayclose)/2 + mysa.moneyihave, dataframe.loc[dayindex, 'buy'])
         i = i + 1
-    return dataframe.iloc[i - 1, 0] * mysa.stocks + mysa.moneyihave
+    incomes = dataframe.iloc[i - 1, 0] * mysa.stocks + mysa.moneyihave
+    mysa.accountIni() #计算完毕后将账户恢复为初始状态，以便再次计算
+    return incomes
 
-originData = readDailyData('sh#603588.txt', '2016/01/01', '2017/01/01')
-originData['buy'] = 0.0
-originData['sell'] = 0.0
-dataframe = originData.iloc[10:28,]
-incomes = runBackTrace(dataframe)
-
-# print(originData.iloc[:,0]) # first column
-# print(originData.index[0:3])
-print(originData.head(30))
-print('My profits = ', incomes)
+# originData = readDailyData('sh#603588.txt', '2016/01/01', '2017/03/09')
+# originData['buy'] = 0.0
+# originData['sell'] = 0.0
+# #dataframe = originData.iloc[10:28,]
+# incomes = runBackTrace(originData)
+#
+# # print(originData.iloc[:,0]) # first column
+# # print(originData.index[0:3])
+# print(originData.head(30))
+# print('My profits = ', incomes)
