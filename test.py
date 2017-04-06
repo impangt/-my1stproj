@@ -1,76 +1,48 @@
-import sys
-from PyQt5 import QtWidgets
-
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
+import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider, Button, RadioButtons
 
-import random
+fig, ax = plt.subplots()
+plt.subplots_adjust(left=0.25, bottom=0.25)
+t = np.arange(0.0, 1.0, 0.001)
+a0 = 5
+f0 = 3
+s = a0*np.sin(2*np.pi*f0*t)
+l, = plt.plot(t, s, lw=2, color='red')
+plt.axis([0, 1, -10, 10])
 
+axcolor = 'lightgoldenrodyellow'
+axfreq = plt.axes([0.25, 0.1, 0.65, 0.03], facecolor=axcolor)
+axamp = plt.axes([0.25, 0.15, 0.65, 0.03], facecolor=axcolor)
 
-class Window(QtWidgets.QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.figure = plt.figure()
-        self.axes = self.figure.add_subplot(111)
-        # We want the axes cleared every time plot() is called
-        #self.axes.hold(False)
-        self.canvas = FigureCanvas(self.figure)
-
-        self.toolbar = NavigationToolbar(self.canvas, self)
-      #  self.toolbar.hide()
-
-        # Just some button
-        self.button1 = QtWidgets.QPushButton('Plot')
-        self.button1.clicked.connect(self.plot)
-
-        self.button2 = QtWidgets.QPushButton('Zoom')
-        self.button2.clicked.connect(self.zoom)
-
-        self.button3 = QtWidgets.QPushButton('Pan')
-        self.button3.clicked.connect(self.pan)
-
-        self.button4 = QtWidgets.QPushButton('Home')
-        self.button4.clicked.connect(self.home)
-
-        # set the layout
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(self.toolbar)
-        layout.addWidget(self.canvas)
-
-        btnlayout = QtWidgets.QHBoxLayout()
-        btnlayout.addWidget(self.button1)
-        btnlayout.addWidget(self.button2)
-        btnlayout.addWidget(self.button3)
-        btnlayout.addWidget(self.button4)
-        qw = QtWidgets.QWidget(self)
-        qw.setLayout(btnlayout)
-        layout.addWidget(qw)
-
-        self.setLayout(layout)
-
-    def home(self):
-        self.toolbar.home()
-
-    def zoom(self):
-        self.toolbar.zoom()
-
-    def pan(self):
-        self.toolbar.pan()
-
-    def plot(self):
-        ''' plot some random stuff '''
-        data = [random.random() for i in range(25)]
-        self.axes.plot(data, '*-')
-        self.canvas.draw()
+sfreq = Slider(axfreq, 'Freq', 0.1, 30.0, valinit=f0)
+samp = Slider(axamp, 'Amp', 0.1, 10.0, valinit=a0)
 
 
-if __name__ == '__main__':
-    app = QtWidgets.QApplication(sys.argv)
+def update(val):
+    amp = samp.val
+    freq = sfreq.val
+    l.set_ydata(amp*np.sin(2*np.pi*freq*t))
+    fig.canvas.draw_idle()
+sfreq.on_changed(update)
+samp.on_changed(update)
 
-    main = Window()
-    main.setWindowTitle('Simple QTpy and MatplotLib example with Zoom/Pan')
-    main.show()
+resetax = plt.axes([0.8, 0.025, 0.1, 0.04])
+button = Button(resetax, 'Reset', color=axcolor, hovercolor='0.975')
 
-    sys.exit(app.exec_())
+
+def reset(event):
+    sfreq.reset()
+    samp.reset()
+button.on_clicked(reset)
+
+rax = plt.axes([0.025, 0.5, 0.15, 0.15], facecolor=axcolor)
+radio = RadioButtons(rax, ('red', 'blue', 'green'), active=0)
+
+
+def colorfunc(label):
+    l.set_color(label)
+    fig.canvas.draw_idle()
+radio.on_clicked(colorfunc)
+
+plt.show()

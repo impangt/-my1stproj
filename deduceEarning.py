@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-# import struct as st
 import numpy as np
 import pandas as pd
 import StockAccount as sa
@@ -9,10 +8,11 @@ mysa = sa.StockAccount()
 
 
 # read days data from cvs file
-def readDailyData(filename, starday, endday):
+def readDailyData(filename): #, starday, endday):
     df = pd.read_csv(filename)
     df = df.set_index('date')
-    df = df.ix[starday:endday, ['open', 'close', 'vol']]
+    # df = df.ix[starday:endday, ['open', 'close', 'vol']]
+    df = df.ix[ :, ['open', 'close', 'vol']]
     return df
 
 
@@ -74,12 +74,12 @@ def runBackTrace(dataframe):
                 mysa.highestpoint = max(todayopen, todayclose)
             issell = True
             t = i
-            if sellPolicy_stoploss(mysa.buypoint, todayopen, mysa.stoplossrate):  # cut loss policy
+            if sellPolicy_stoploss(mysa.buyprice, todayopen, mysa.stoplossrate):  # cut loss policy
                 print('Failed:sell', dataframe.index[i], end='')
                 i = i + predays - 1  # if sell out today for cut loss, we will not buy in n(predays) days
-            elif sellPolicy_getprofits(mysa.buypoint, todayopen, mysa.stopearnrate):  # sell for getting profits
+            elif sellPolicy_getprofits(mysa.buyprice, todayopen, mysa.stopearnrate):  # sell for getting profits
                 print('>>>SUCCESS:sell', dataframe.index[i], end='')
-                i = i + predays * 5  # if sell out today for cut earning, we will not buy in the next day
+                i = i + predays * 2  # if sell out today for cut earning, we will not buy in the next few days
             elif sellPolicy_downfromhight(mysa.highestpoint, todayopen, mysa.turndownrate):
                 print('FORCE:sell ', dataframe.index[i], end='')
             else:
@@ -89,7 +89,7 @@ def runBackTrace(dataframe):
                 dataframe.iloc[t,4] = (todayopen+todayclose)/2
                 mysa.status = False
                 print('--', todayopen, mysa.moneyihave)
-        else:  # we can buy
+        else:            # we can buy
             L1 = dataframe.iloc[i - predays:i, 0]
             L2 = dataframe.iloc[i - predays:i, 1]
             if buyPolicy_upfewdays(L1, L2):  # buy policy
