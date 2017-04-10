@@ -1,43 +1,18 @@
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QFileDialog
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import configparser
+
+config = configparser.ConfigParser()
+config.read_file(open('config\\update.ini'))
+a = config.get("TEST","pang")
+print (a)
+
+# config.set("ZIP", "MD5", "1234")
+# config.write(open('config\\update.ini', "r+"))
+
+fd = open(('config\\update.ini'), 'w')
+config.set("ZIP", "MD5", "2234")
+config.write(fd)  # 在内存中修改的内容写回文件中，相当于保存
+fd.close()
 
 
-class MyWindow(QtWidgets.QWidget):
-    def __init__(self):
-        super(MyWindow, self).__init__()
-        self.myButton = QtWidgets.QPushButton(self)
-        self.myButton.setObjectName("myButton")
-        self.myButton.setText("Open")
-        self.myButton.clicked.connect(self.msg)
-
-    def msg(self):
-        # directory1 = QFileDialog.getExistingDirectory(self,
-        #                                               "选取文件夹",
-        #                                               "C:/")  # 起始路径
-        # print(directory1)
-
-        fileName1, filetype = QFileDialog.getOpenFileName(self,
-                                                          "选取文件",
-                                                          "C:/",
-                                                          "All Files (*);;Text Files (*.txt)")  # 设置文件扩展名过滤,注意用双分号间隔
-        print('file name is: ',fileName1,'filetype is: ', filetype)
-        #
-        # files, ok1 = QFileDialog.getOpenFileNames(self,
-        #                                           "多文件选择",
-        #                                           "C:/",
-        #                                           "All Files (*);;Text Files (*.txt)")
-        # print(files,'----', ok1)
-        #
-        # fileName2, ok2 = QFileDialog.getSaveFileName(self,
-        #                                              "文件保存",
-        #                                              "C:/",
-        #                                              "All Files (*);;Text Files (*.txt)")
-
-
-if __name__ == "__main__":
-    import sys
-
-    app = QtWidgets.QApplication(sys.argv)
-    myshow = MyWindow()
-    myshow.show()
-    sys.exit(app.exec_())

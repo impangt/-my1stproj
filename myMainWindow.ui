@@ -68,7 +68,50 @@
          <widget class="QDateEdit" name="dateEditTo"/>
         </item>
         <item>
+         <widget class="QPushButton" name="iniButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>40</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>I</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="zoomInButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>30</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>40</width>
+            <height>25</height>
+           </size>
+          </property>
           <property name="text">
            <string>+</string>
           </property>
@@ -76,6 +119,15 @@
         </item>
         <item>
          <widget class="QPushButton" name="zoomoutButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>40</width>
+            <height>25</height>
+           </size>
+          </property>
           <property name="text">
            <string>-</string>
           </property>
@@ -100,8 +152,11 @@
         </item>
         <item>
          <widget class="QPushButton" name="loadstButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
-           <string>Look Back</string>
+           <string>computing</string>
           </property>
          </widget>
         </item>
@@ -178,8 +233,8 @@
    <slot>openButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>51</x>
-     <y>279</y>
+     <x>62</x>
+     <y>160</y>
     </hint>
     <hint type="destinationlabel">
      <x>41</x>
@@ -194,8 +249,8 @@
    <slot>applyButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>663</x>
-     <y>279</y>
+     <x>659</x>
+     <y>160</y>
     </hint>
     <hint type="destinationlabel">
      <x>597</x>
@@ -210,8 +265,8 @@
    <slot>lookbackButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>749</x>
-     <y>279</y>
+     <x>740</x>
+     <y>160</y>
     </hint>
     <hint type="destinationlabel">
      <x>576</x>
@@ -227,7 +282,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>209</x>
-     <y>278</y>
+     <y>158</y>
     </hint>
     <hint type="destinationlabel">
      <x>168</x>
@@ -243,7 +298,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>321</x>
-     <y>278</y>
+     <y>158</y>
     </hint>
     <hint type="destinationlabel">
      <x>281</x>
@@ -258,8 +313,8 @@
    <slot>windowSliding()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>524</x>
-     <y>279</y>
+     <x>573</x>
+     <y>159</y>
     </hint>
     <hint type="destinationlabel">
      <x>537</x>
@@ -274,8 +329,8 @@
    <slot>zoomInButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>402</x>
-     <y>279</y>
+     <x>413</x>
+     <y>161</y>
     </hint>
     <hint type="destinationlabel">
      <x>368</x>
@@ -290,12 +345,28 @@
    <slot>zoomoutButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>483</x>
-     <y>279</y>
+     <x>459</x>
+     <y>161</y>
     </hint>
     <hint type="destinationlabel">
      <x>450</x>
      <y>141</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>iniButton</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>iniButtonClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>347</x>
+     <y>153</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>358</x>
+     <y>237</y>
     </hint>
    </hints>
   </connection>
@@ -309,5 +380,6 @@
   <slot>windowSliding()</slot>
   <slot>zoomInButtonClicked()</slot>
   <slot>zoomoutButtonClicked()</slot>
+  <slot>iniButtonClicked()</slot>
  </slots>
 </ui>

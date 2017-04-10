@@ -7,6 +7,20 @@ import StockAccount as sa
 mysa = sa.StockAccount()
 
 
+def getbuypolicieslist():
+
+    buyplist=['N days go up',
+              'N days go down',
+              'buy 3']
+    return buyplist
+
+def getsellpolicieslist():
+    sellplist=['stop loss at',
+               'get profits after earning ',
+               'sdown from hight',
+               'sell 4']
+    return sellplist
+
 # read days data from cvs file
 def readDailyData(filename): #, starday, endday):
     df = pd.read_csv(filename)
@@ -103,6 +117,7 @@ def runBackTrace(dataframe):
     incomes = dataframe.iloc[i - 1, 0] * mysa.stocks + mysa.moneyihave
     mysa.accountIni() #计算完毕后将账户恢复为初始状态，以便再次计算
     return incomes
+
 
 # originData = readDailyData('sh#603588.txt', '2016/01/01', '2017/03/09')
 # originData['buy'] = 0.0

@@ -1,8 +1,12 @@
 import sys
 import myMainWindow
+from selectPoliciesDlg import PoliciesDialog
 import deduceEarning as dE
 import datetime
+
 import matplotlib
+matplotlib.use("Qt5Agg")
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -11,7 +15,6 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
 
-matplotlib.use("Qt5Agg")
 
 
 class MyCanvas(FigureCanvas):
@@ -103,6 +106,7 @@ class ApplicationWindow(QMainWindow):
 
         self.mycanvas = MyCanvas(self)  # mainAppWindow.ui.mainWidget)#, width=5, height=4, dpi=100)
         self.ui.verticalLayout.addWidget(self.mycanvas)
+        # self.ui.loadstButton.setDisabled(True)
 
         self.dataframe = pd.DataFrame()
         self.originaldatalength = 0
@@ -129,6 +133,15 @@ class ApplicationWindow(QMainWindow):
             # draw the figure
             self.mycanvas.drawfigure(self.dataframe)
 
+            # set buttons enable
+            self.ui.loadstButton.setDisabled(False)
+            self.ui.iniButton.setDisabled(False)
+            self.ui.zoomInButton.setDisabled(False)
+            self.ui.zoomoutButton.setDisabled(False)
+
+    def iniButtonClicked(self):
+        self.mycanvas.drawfigure(self.dataframe)
+
     def zoomInButtonClicked(self):
         if self.slidewindowsize > 10:
             view_lenth = int(self.slidewindowsize * 8 / 10)
@@ -151,10 +164,13 @@ class ApplicationWindow(QMainWindow):
             self.setEditDate(view_dateframe.index[0], view_dateframe.index[-1])
 
     def applyButtonClicked(self):
-        reply = QMessageBox.information(self,
-                                        "Whoops",
-                                        "To be completed in the future!",
-                                        QMessageBox.Ok)  # .Yes | QMessageBox.No)
+        pdlg = PoliciesDialog()
+        pdlg.ini_buyandsell_lists(dE.getbuypolicieslist(), dE.getsellpolicieslist())
+        if pdlg.exec_():
+            b = pdlg.get_buy_plist()
+            s = pdlg.get_sell_plist()
+            print('policies dialog return ture',b, s)
+        pdlg.destroy()
 
     def lookbackButtonClicked(self):
         print('select from ', self.dataframe.index[self.view_start], ' to ',

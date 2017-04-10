@@ -8,11 +8,14 @@ class StockAccount:
         self.buyprice = 0.0
         self.highestpoint = 0.0
         self.incomes = 0.0
-        self.taxes = 0.0
+
         self.profits = 0.0
         self.status = False  # 0:empty , 1:hold
+
+        # parameters we get from ini file
+        self.taxes = 0.0
         self.stoplossrate = 8.0  # 设置止损点, 单位：百分比
-        self.stopearnrate = 26  # 设置止盈点, 单位：百分比
+        self.stopearnrate = 26.0  # 设置止盈点, 单位：百分比
         self.turndownrate = 15.0  # 设置卖出点，当从买入持有阶段的历史高点下跌 N 个百分点后卖出
 
     def accountIni(self):
