@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>588</width>
-    <height>512</height>
+    <width>590</width>
+    <height>529</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,8 +16,8 @@
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>220</x>
-     <y>460</y>
+     <x>360</x>
+     <y>490</y>
      <width>161</width>
      <height>31</height>
     </rect>
@@ -119,7 +119,7 @@
     <rect>
      <x>40</x>
      <y>310</y>
-     <width>421</width>
+     <width>511</width>
      <height>131</height>
     </rect>
    </property>
@@ -133,7 +133,7 @@
     <bool>true</bool>
    </property>
    <property name="styleSheet">
-    <string notr="true">Background-color:rgb(229,204,255)</string>
+    <string notr="true"/>
    </property>
    <property name="frameShape">
     <enum>QFrame::Panel</enum>
@@ -142,13 +142,13 @@
     <bool>true</bool>
    </property>
    <property name="rowCount">
-    <number>4</number>
+    <number>0</number>
    </property>
    <property name="columnCount">
     <number>3</number>
    </property>
    <attribute name="horizontalHeaderVisible">
-    <bool>true</bool>
+    <bool>false</bool>
    </attribute>
    <attribute name="verticalHeaderVisible">
     <bool>false</bool>
@@ -156,10 +156,6 @@
    <attribute name="verticalHeaderHighlightSections">
     <bool>true</bool>
    </attribute>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
    <column/>
    <column/>
    <column/>
@@ -181,7 +177,7 @@
    <property name="geometry">
     <rect>
      <x>50</x>
-     <y>450</y>
+     <y>280</y>
      <width>161</width>
      <height>16</height>
     </rect>
@@ -193,34 +189,34 @@
   <widget class="QPushButton" name="pushButton_3">
    <property name="geometry">
     <rect>
-     <x>470</x>
-     <y>340</y>
+     <x>40</x>
+     <y>450</y>
      <width>75</width>
      <height>23</height>
     </rect>
    </property>
    <property name="text">
-    <string>Edit</string>
+    <string>Reset</string>
    </property>
   </widget>
   <widget class="QPushButton" name="pushButton_4">
    <property name="geometry">
     <rect>
-     <x>470</x>
-     <y>380</y>
-     <width>75</width>
+     <x>120</x>
+     <y>450</y>
+     <width>91</width>
      <height>23</height>
     </rect>
    </property>
    <property name="text">
-    <string>Save Edit</string>
+    <string>Save Changes</string>
    </property>
   </widget>
   <widget class="Line" name="line">
    <property name="geometry">
     <rect>
      <x>47</x>
-     <y>270</y>
+     <y>260</y>
      <width>501</width>
      <height>20</height>
     </rect>
@@ -239,12 +235,12 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>178</x>
-     <y>390</y>
+     <x>361</x>
+     <y>490</y>
     </hint>
     <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
+     <x>311</x>
+     <y>463</y>
     </hint>
    </hints>
   </connection>
@@ -255,12 +251,12 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>246</x>
-     <y>390</y>
+     <x>386</x>
+     <y>490</y>
     </hint>
     <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
+     <x>432</x>
+     <y>455</y>
     </hint>
    </hints>
   </connection>
@@ -268,20 +264,105 @@
    <sender>pushButton</sender>
    <signal>clicked()</signal>
    <receiver>Dialog</receiver>
-   <slot>resetselections()</slot>
+   <slot>resetselections1()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>207</x>
-     <y>330</y>
+     <x>237</x>
+     <y>241</y>
     </hint>
     <hint type="destinationlabel">
-     <x>463</x>
-     <y>369</y>
+     <x>243</x>
+     <y>291</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_3</sender>
+   <signal>clicked()</signal>
+   <receiver>Dialog</receiver>
+   <slot>resetedit()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>80</x>
+     <y>460</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>67</x>
+     <y>486</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_4</sender>
+   <signal>clicked()</signal>
+   <receiver>Dialog</receiver>
+   <slot>savechanges()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>159</x>
+     <y>467</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>190</x>
+     <y>499</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton_2</sender>
+   <signal>clicked()</signal>
+   <receiver>Dialog</receiver>
+   <slot>resetselections2()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>492</x>
+     <y>234</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>497</x>
+     <y>287</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBoxBuySelectAll</sender>
+   <signal>clicked()</signal>
+   <receiver>Dialog</receiver>
+   <slot>selectall1()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>93</x>
+     <y>240</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>302</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>checkBoxSellSelectAll</sender>
+   <signal>clicked()</signal>
+   <receiver>Dialog</receiver>
+   <slot>selectall2()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>388</x>
+     <y>235</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>369</x>
+     <y>286</y>
     </hint>
    </hints>
   </connection>
  </connections>
  <slots>
-  <slot>resetselections()</slot>
+  <slot>resetselections1()</slot>
+  <slot>resetedit()</slot>
+  <slot>savechanges()</slot>
+  <slot>resetselections2()</slot>
+  <slot>selectall1()</slot>
+  <slot>selectall2()</slot>
  </slots>
 </ui>
