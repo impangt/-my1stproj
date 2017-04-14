@@ -1,48 +1,75 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider, Button, RadioButtons
+"""
+Example to draw a cursor and report the data coords in wx
+"""
+# matplotlib requires wxPython 2.8+
+# set the wxPython version in lib\site-packages\wx.pth file
+# or if you have wxversion installed un-comment the lines below
+#import wxversion
+#wxversion.ensureMinimal('2.8')
 
-fig, ax = plt.subplots()
-plt.subplots_adjust(left=0.25, bottom=0.25)
-t = np.arange(0.0, 1.0, 0.001)
-a0 = 5
-f0 = 3
-s = a0*np.sin(2*np.pi*f0*t)
-l, = plt.plot(t, s, lw=2, color='red')
-plt.axis([0, 1, -10, 10])
+import matplotlib
+matplotlib.use('WXAgg')
 
-axcolor = 'lightgoldenrodyellow'
-axfreq = plt.axes([0.25, 0.1, 0.65, 0.03], facecolor=axcolor)
-axamp = plt.axes([0.25, 0.15, 0.65, 0.03], facecolor=axcolor)
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+from matplotlib.backends.backend_wx import NavigationToolbar2Wx, wxc
+from matplotlib.figure import Figure
+from numpy import arange, sin, pi
 
-sfreq = Slider(axfreq, 'Freq', 0.1, 30.0, valinit=f0)
-samp = Slider(axamp, 'Amp', 0.1, 10.0, valinit=a0)
-
-
-def update(val):
-    amp = samp.val
-    freq = sfreq.val
-    l.set_ydata(amp*np.sin(2*np.pi*freq*t))
-    fig.canvas.draw_idle()
-sfreq.on_changed(update)
-samp.on_changed(update)
-
-resetax = plt.axes([0.8, 0.025, 0.1, 0.04])
-button = Button(resetax, 'Reset', color=axcolor, hovercolor='0.975')
+import wx
 
 
-def reset(event):
-    sfreq.reset()
-    samp.reset()
-button.on_clicked(reset)
+class CanvasFrame(wx.Frame):
+    def __init__(self, ):
+        wx.Frame.__init__(self, None, -1,
+                          'CanvasFrame', size=(550, 350))
 
-rax = plt.axes([0.025, 0.5, 0.15, 0.15], facecolor=axcolor)
-radio = RadioButtons(rax, ('red', 'blue', 'green'), active=0)
+        self.SetBackgroundColour(wxc.NamedColour("WHITE"))
+
+        self.figure = Figure()
+        self.axes = self.figure.add_subplot(111)
+        t = arange(0.0, 3.0, 0.01)
+        s = sin(2*pi*t)
+
+        self.axes.plot(t, s)
+        self.axes.set_xlabel('t')
+        self.axes.set_ylabel('sin(t)')
+        self.figure_canvas = FigureCanvas(self, -1, self.figure)
+
+        # Note that event is a MplEvent
+        self.figure_canvas.mpl_connect('motion_notify_event', self.UpdateStatusBar)
+        self.figure_canvas.Bind(wx.EVT_ENTER_WINDOW, self.ChangeCursor)
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.figure_canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
+        self.SetSizer(self.sizer)
+        self.Fit()
+
+        self.statusBar = wx.StatusBar(self, -1)
+        self.SetStatusBar(self.statusBar)
+
+        self.toolbar = NavigationToolbar2Wx(self.figure_canvas)
+        self.sizer.Add(self.toolbar, 0, wx.LEFT | wx.EXPAND)
+        self.toolbar.Show()
+
+    def ChangeCursor(self, event):
+        self.figure_canvas.SetCursor(wxc.StockCursor(wx.CURSOR_BULLSEYE))
+
+    def UpdateStatusBar(self, event):
+        if event.inaxes:
+            x, y = event.xdata, event.ydata
+            self.statusBar.SetStatusText(("x= " + str(x) +
+                                          "  y=" + str(y)),
+                                         0)
 
 
-def colorfunc(label):
-    l.set_color(label)
-    fig.canvas.draw_idle()
-radio.on_clicked(colorfunc)
+class App(wx.App):
+    def OnInit(self):
+        'Create the main window and insert the custom frame'
+        frame = CanvasFrame()
+        self.SetTopWindow(frame)
+        frame.Show(True)
+        return True
 
-plt.show()
+if __name__ == '__main__':
+    app = App(0)
+    app.MainLoop()

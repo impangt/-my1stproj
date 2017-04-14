@@ -110,6 +110,7 @@ class ApplicationWindow(QMainWindow):
 
         self.dataframe = pd.DataFrame()
         self.originaldatalength = 0
+        self.pdfile = 'config\\policyselections'
 
     def openButtonClicked(self):
         self.targetDir, filetype = QFileDialog.getOpenFileName(self,
@@ -165,21 +166,48 @@ class ApplicationWindow(QMainWindow):
 
     def applyButtonClicked(self):
         pdlg = PoliciesDialog()
-        pdlg.ini_buyandsell_lists(dE.getbuypolicieslist(), dE.getsellpolicieslist())
+        bpl, spl = self.getbuysellpoliceslist()
+        pdlg.ini_buyandsell_lists(dE.getbuypolicieslist(),bpl, dE.getsellpolicieslist(),spl)
+
         if pdlg.exec_():
-            b = pdlg.get_buy_plist()
-            s = pdlg.get_sell_plist()
-            print('policies dialog return ture',b, s)
+            buypl = pdlg.get_buy_pstrlist()
+            str1 = ','.join(buypl)
+            sellpl = pdlg.get_sell_pstrlist()
+            str2 = ','.join(sellpl)
+            print(buypl,sellpl)
+            if buypl and sellpl:
+                print("str",str1,str2)
+                fd = open(self.pdfile, 'w')
+                fd.write(str1)
+                fd.write('\n')
+                fd.write(str2)
+                fd.close()
         pdlg.destroy()
 
     def lookbackButtonClicked(self):
         print('select from ', self.dataframe.index[self.view_start], ' to ',
               self.dataframe.index[self.view_start + self.slidewindowsize - 1], self.slidewindowsize)
+        bpl, spl = self.getbuysellpoliceslist()
         view_dateframe = self.dataframe.iloc[self.view_start:self.view_start + self.slidewindowsize - 1, ]
-        incomes = dE.runBackTrace(view_dateframe)
+        incomes = dE.runBackTrace(view_dateframe,bpl, spl)
         self.mycanvas.drawindicator(view_dateframe)
         # print('look back', view_dateframe.head(10))
         print('---current income = ', incomes)
+
+    # read selected policies from file
+    def getbuysellpoliceslist(self):
+        fd = open(self.pdfile)
+        lines = fd.readlines()
+        print(lines)
+        bplist0 = lines[0].strip('\n').split(',')
+        splist0 = lines[1].split(',')
+        bplist1 = []
+        for i in bplist0:
+            bplist1.append(int(i))
+        splist1 = []
+        for i in splist0:
+            splist1.append(int(i))
+        return bplist1, splist1
 
     def slideWindowZoom(self):
         pass

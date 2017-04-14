@@ -135,13 +135,13 @@ def runBackTrace(dataframe, buyplist, sellplist):
     mysa.accountReset()  # 计算完毕后将账户信息恢复为初始状态，以便再次计算
     return incomes
 
-originData = readDailyData('sh#603588.txt')
-originData['buy'] = 0.0
-originData['sell'] = 0.0
-#print(originData.head(5))
-#dataframe = originData.iloc[10:28,]
-buypl = [1,0]
-sellpl = [1,1,1]
-incomes = runBackTrace(originData,buypl,sellpl)
-#print(originData.head(30))
-print('My profits = ', incomes)
+# originData = readDailyData('sh#603588.txt')
+# originData['buy'] = 0.0
+# originData['sell'] = 0.0
+# #print(originData.head(5))
+# #dataframe = originData.iloc[10:28,]
+# buypl = [1,0]
+# sellpl = [1,1,1]
+# incomes = runBackTrace(originData,buypl,sellpl)
+# #print(originData.head(30))
+# print('My profits = ', incomes)

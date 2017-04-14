@@ -19,9 +19,8 @@ class PoliciesDialog(QDialog, selectPoliciesDialog.Ui_Dialog):
         #     headItem = self.tableWidget.horizontalHeaderItem(x)  # 获得水平方向表头的Item对象
         #     headItem.setForeground(QColor(0, 0, 255))
         #     headItem.setBackground(QColor(Qt.cyan))      # 设置单元格背景颜色, 在windows环境中不起作用!!!
-        self.filename = "config\\config.ini"
+        self.filename = 'config\\config.ini' # 如果使用双引号会出错，为什么？？？？
         self.filltabledata()
-        self.pdfile = "config\\policyselections"
 
     def resetselections1(self):
         l1 = []
@@ -59,35 +58,44 @@ class PoliciesDialog(QDialog, selectPoliciesDialog.Ui_Dialog):
             else:
                 check_box.setChecked(False)
 
-    def ini_buyandsell_lists(self, buylist, selllist):
+    def ini_buyandsell_lists(self, buylist, bselections, selllist,sselections):
+        if len(buylist) != len(bselections) or len(selllist) != len(sselections):
+            return False
+
         for i in range(len(buylist)):
             self.listWidgetBuy.setItemWidget(QListWidgetItem(self.listWidgetBuy), QCheckBox(buylist[i]))
         for i in range(self.listWidgetBuy.count()):
             check_box = self.listWidgetBuy.itemWidget(self.listWidgetBuy.item(i))
-            check_box.setChecked(True)
-        self.checkBoxBuySelectAll.setChecked(True)
+            if bselections[i]:
+                check_box.setChecked(True)
 
         for j in range(len(selllist)):
             self.listWidgetSell.setItemWidget(QListWidgetItem(self.listWidgetSell), QCheckBox(selllist[j]))
         for i in range(self.listWidgetSell.count()):
             check_box = self.listWidgetSell.itemWidget(self.listWidgetSell.item(i))
-            check_box.setChecked(True)
-        self.checkBoxSellSelectAll.isChecked()
+            if sselections[i]:
+                check_box.setChecked(True)
 
-    def get_buy_plist(self):
+        return True
+
+    def get_buy_pstrlist(self):
         l = []
         for i in range(self.listWidgetBuy.count()):
             cb1 = self.listWidgetBuy.itemWidget(self.listWidgetBuy.item(i))
             if cb1.checkState():
-                l.append(i)
+                l.append('1')
+            else:
+                l.append('0')
         return l
 
-    def get_sell_plist(self):
+    def get_sell_pstrlist(self):
         l = []
         for j in range(self.listWidgetSell.count()):
             cb2 = self.listWidgetSell.itemWidget(self.listWidgetSell.item(j))
             if cb2.checkState():
-                l.append(j)
+                l.append('1')
+            else:
+                l.append('0')
         return l
 
     def filltabledata(self):
@@ -130,13 +138,13 @@ class PoliciesDialog(QDialog, selectPoliciesDialog.Ui_Dialog):
 
     def savechanges(self):
         config = configparser.ConfigParser()
-        config.read_file(open(self.filenmae))
+        config.read_file(open(self.filename))
         sec = config.sections()
         lop = []
         for i in range(len(sec)):
             lop.append(config.options(sec[i]))
 
-        fd = open((self.filename), 'w')
+        fd = open(self.filename, 'w')
         i = 0
         for n in range(len(sec)):
             for j in range(len(lop[n])):
@@ -147,19 +155,10 @@ class PoliciesDialog(QDialog, selectPoliciesDialog.Ui_Dialog):
                 config.set(sec[n], s0, s1.strip()+' # '+s2.strip())
                 #print(s0,s1,s2)
             i = i + 1
-        config.write(fd)  # 在内存中修改的内容写回文件中，相当于保存
+        config.write(fd)
         fd.close()
 
-    def accept(self):
-        #write the policies selections to a file
-        buypl = self.get_buy_plist()
-        print(buypl)
-        # fd = open(self.pdfile, 'w')
-        # fd.write(buypl)
-        # fd.close()
-        super(PoliciesDialog, self).accept()
-
-app = QApplication(sys.argv)
-dialog = PoliciesDialog()
-dialog.show()
-app.exec_()
+# app = QApplication(sys.argv)
+# dialog = PoliciesDialog()
+# dialog.show()
+# app.exec_()
