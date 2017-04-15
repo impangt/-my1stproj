@@ -1,39 +1,63 @@
-"""
-The SpanSelector is a mouse widget to select a xmin/xmax range and plot the
-detail view of the selected region in the lower axes
-"""
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.widgets import SpanSelector
 
-fig = plt.figure(figsize=(8, 6))
-ax = fig.add_subplot(211, facecolor='#FFFFCC')
+class DraggableRectangle:
+    def __init__(self, rect):
+        self.rect = rect
+        self.press = None
 
-x = np.arange(0.0, 5.0, 0.01)
-y = np.sin(2*np.pi*x) + 0.5*np.random.randn(len(x))
+    def connect(self):
+        'connect to all the events we need'
+        self.cidpress = self.rect.figure.canvas.mpl_connect(
+            'button_press_event', self.on_press)
+        self.cidrelease = self.rect.figure.canvas.mpl_connect(
+            'button_release_event', self.on_release)
+        self.cidmotion = self.rect.figure.canvas.mpl_connect(
+            'motion_notify_event', self.on_motion)
 
-ax.plot(x, y, '-')
-ax.set_ylim(-2, 2)
-ax.set_title('Press left mouse button and drag to test')
+    def on_press(self, event):
+        'on button press we will see if the mouse is over us and store some data'
+        if event.inaxes != self.rect.axes: return
 
-ax2 = fig.add_subplot(212, facecolor='#FFFFCC')
-line2, = ax2.plot(x, y, '-')
+        contains, attrd = self.rect.contains(event)
+        if not contains: return
+        print('event contains', self.rect.xy)
+        x0, y0 = self.rect.xy
+        self.press = x0, y0, event.xdata, event.ydata
+
+    def on_motion(self, event):
+        'on motion we will move the rect if the mouse is over us'
+        if self.press is None: return
+        if event.inaxes != self.rect.axes: return
+        x0, y0, xpress, ypress = self.press
+        dx = event.xdata - xpress
+        dy = event.ydata - ypress
+        #print('x0=%f, xpress=%f, event.xdata=%f, dx=%f, x0+dx=%f' %
+        #      (x0, xpress, event.xdata, dx, x0+dx))
+        self.rect.set_x(x0+dx)
+        self.rect.set_y(y0+dy)
+
+        self.rect.figure.canvas.draw()
 
 
-def onselect(xmin, xmax):
-    indmin, indmax = np.searchsorted(x, (xmin, xmax))
-    indmax = min(len(x) - 1, indmax)
+    def on_release(self, event):
+        'on release we reset the press data'
+        self.press = None
+        self.rect.figure.canvas.draw()
 
-    thisx = x[indmin:indmax]
-    thisy = y[indmin:indmax]
-    line2.set_data(thisx, thisy)
-    ax2.set_xlim(thisx[0], thisx[-1])
-    ax2.set_ylim(thisy.min(), thisy.max())
-    fig.canvas.draw()
+    def disconnect(self):
+        'disconnect all the stored connection ids'
+        self.rect.figure.canvas.mpl_disconnect(self.cidpress)
+        self.rect.figure.canvas.mpl_disconnect(self.cidrelease)
+        self.rect.figure.canvas.mpl_disconnect(self.cidmotion)
 
-# set useblit True on gtkagg for enhanced performance
-span = SpanSelector(ax, onselect, 'horizontal', useblit=True,
-                    rectprops=dict(alpha=0.5, facecolor='red'))
-
+fig = plt.figure()
+ax = fig.add_subplot(111)
+rects = ax.bar(range(10), 20*np.random.rand(10),facecolor='g', alpha=0.2)
+drs = []
+for rect in rects:
+    dr = DraggableRectangle(rect)
+    dr.connect()
+    drs.append(dr)
 
 plt.show()

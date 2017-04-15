@@ -1,75 +1,94 @@
-"""
-Example to draw a cursor and report the data coords in wx
-"""
-# matplotlib requires wxPython 2.8+
-# set the wxPython version in lib\site-packages\wx.pth file
-# or if you have wxversion installed un-comment the lines below
-#import wxversion
-#wxversion.ensureMinimal('2.8')
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.patches import Rectangle
 
-import matplotlib
-matplotlib.use('WXAgg')
+class DraggableRectangle(object):
+    def __init__(self):
+        self.ax = plt.gca()
+        self.rect = Rectangle((0.5,0), 0.22, 2,facecolor='g', alpha=0.2)
+        self.rectl = Rectangle((0.5-0.05, 0), 0.05, 0.2, facecolor='b', alpha=0.8)
+        self.rectr = Rectangle((0.5+0.22, 0), 0.05, 0.2, facecolor='b', alpha=0.8)
+        self.rect_x = 0.5
 
-from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-from matplotlib.backends.backend_wx import NavigationToolbar2Wx, wxc
-from matplotlib.figure import Figure
-from numpy import arange, sin, pi
+        self.ax.add_patch(self.rect)
+        self.ax.add_patch(self.rectl)
+        self.ax.add_patch(self.rectr)
 
-import wx
+        self.press = None # 0,
+        self.pressl = None
+        self.pressr = None
 
-
-class CanvasFrame(wx.Frame):
-    def __init__(self, ):
-        wx.Frame.__init__(self, None, -1,
-                          'CanvasFrame', size=(550, 350))
-
-        self.SetBackgroundColour(wxc.NamedColour("WHITE"))
-
-        self.figure = Figure()
-        self.axes = self.figure.add_subplot(111)
-        t = arange(0.0, 3.0, 0.01)
-        s = sin(2*pi*t)
-
-        self.axes.plot(t, s)
-        self.axes.set_xlabel('t')
-        self.axes.set_ylabel('sin(t)')
-        self.figure_canvas = FigureCanvas(self, -1, self.figure)
-
-        # Note that event is a MplEvent
-        self.figure_canvas.mpl_connect('motion_notify_event', self.UpdateStatusBar)
-        self.figure_canvas.Bind(wx.EVT_ENTER_WINDOW, self.ChangeCursor)
-
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(self.figure_canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
-        self.SetSizer(self.sizer)
-        self.Fit()
-
-        self.statusBar = wx.StatusBar(self, -1)
-        self.SetStatusBar(self.statusBar)
-
-        self.toolbar = NavigationToolbar2Wx(self.figure_canvas)
-        self.sizer.Add(self.toolbar, 0, wx.LEFT | wx.EXPAND)
-        self.toolbar.Show()
-
-    def ChangeCursor(self, event):
-        self.figure_canvas.SetCursor(wxc.StockCursor(wx.CURSOR_BULLSEYE))
-
-    def UpdateStatusBar(self, event):
-        if event.inaxes:
-            x, y = event.xdata, event.ydata
-            self.statusBar.SetStatusText(("x= " + str(x) +
-                                          "  y=" + str(y)),
-                                         0)
+        self.ax.figure.canvas.mpl_connect('button_press_event', self.on_press)
+        self.ax.figure.canvas.mpl_connect('button_release_event', self.on_release)
+        self.ax.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
 
 
-class App(wx.App):
-    def OnInit(self):
-        'Create the main window and insert the custom frame'
-        frame = CanvasFrame()
-        self.SetTopWindow(frame)
-        frame.Show(True)
-        return True
+    def on_press(self, event):
+        if event.inaxes != self.rect.axes: return
+        contains, attrd = self.rect.contains(event)
+        containsl, attrdl = self.rectl.contains(event)
+        containsr, attrdr = self.rectr.contains(event)
+        if contains:
+            x0, y0 = self.rect.xy
+            self.press = x0, y0, event.xdata, event.ydata
+        elif containsl:
+            xl, yl = self.rectl.xy
+            self.pressl = xl, yl, event.xdata, event.ydata
+        elif containsr:
+            xr, yr = self.rectr.xy
+            self.pressr = xr, yr, event.xdata, event.ydata
+        else:
+            return
 
-if __name__ == '__main__':
-    app = App(0)
-    app.MainLoop()
+    def on_release(self, event):
+        print ('release')
+        self.press = None
+        self.pressl = None
+        self.pressr = None
+        self.ax.figure.canvas.draw()
+
+    def on_motion(self, event):
+        'on motion we will move the rect if the mouse is over us'
+        if self.press is None and self.pressl is None and self.pressr is None: return
+        if event.inaxes != self.rect.axes and event.inaxes != self.rectl.axes and event.inaxes != self.rectr.axes: return
+
+        if self.press != None:
+            x0, y0, xpress, ypress = self.press
+            dx = event.xdata - xpress
+            self.rect_x = x0+dx
+            self.rect.set_x(self.rect_x)
+            self.rectl.set_x(self.rect_x-self.rectl.get_width())
+            self.rectr.set_x(self.rect_x+self.rect.get_width())
+            # self.rect.figure.canvas.draw()
+        elif self.pressl != None:
+            if event.xdata >= self.rectr.get_x()-0.1: return
+            xl, yl, xpress, ypress = self.pressl
+            dx = event.xdata - xpress
+            self.rectl.set_x(xl + dx - self.rectl.get_width())
+            # draw rect
+            self.rect.set_x(xl + dx)
+            xr = self.rectr.get_x()
+            recwidth = xr-xl-dx
+            self.rect.set_width(recwidth)
+            # self.rectl.figure.canvas.draw()
+        elif self.pressr != None:
+            if event.xdata <= self.rectl.get_x()+self.rectl.get_width()+0.1: return
+            xr, yr, xpress, ypress = self.pressr
+            dx = event.xdata - xpress
+            self.rectr.set_x(xr+dx)
+            # draw rect
+            xl = self.rectl.get_x()
+            recwidth = xr+dx - xl - self.rectl.get_width()
+            self.rect.set_width(recwidth)
+            # self.rectr.figure.canvas.draw()
+
+        self.rect.figure.canvas.draw()# why we just draw rect here, but rectl and rectr are drawed too ?
+
+
+t = np.arange(0, 8, .01)
+s = np.sin(3 * np.pi * t)
+plt.plot(t,s)
+
+plt.axis([0, 2, 0, 2])
+a = DraggableRectangle()
+plt.show()
