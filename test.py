@@ -41,7 +41,7 @@ class DraggableRectangle(object):
             return
 
     def on_release(self, event):
-        print ('release')
+        # print ('release')
         self.press = None
         self.pressl = None
         self.pressr = None

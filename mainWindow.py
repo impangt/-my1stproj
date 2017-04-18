@@ -1,23 +1,216 @@
-import sys
-import myMainWindow
-from selectPoliciesDlg import PoliciesDialog
-import deduceEarning as dE
-import datetime
-
 import matplotlib
 matplotlib.use("Qt5Agg")
 
-import matplotlib.pyplot as plt
+import sys
+import myMainWindow
+import datetime
 import pandas as pd
 import numpy as np
 from numpy import arange, sin, pi
+from selectPoliciesDlg import PoliciesDialog
+import deduceEarning as dE
+import drawGraph
+
+from matplotlib.patches import Rectangle
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtCore import QDate
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
 
+class DraggableRectangle(object):
+    def __init__(self):
+        self.ax = plt.gca()
+        self.rect = Rectangle((0.5,0), 0.22, 2,facecolor='g', alpha=0.2)
+        self.rectl = Rectangle((0.5-0.05, 0), 0.05, 0.2, facecolor='b', alpha=0.8)
+        self.rectr = Rectangle((0.5+0.22, 0), 0.05, 0.2, facecolor='b', alpha=0.8)
+        self.rect_x = 0.5
 
+        self.ax.add_patch(self.rect)
+        self.ax.add_patch(self.rectl)
+        self.ax.add_patch(self.rectr)
+
+        self.press = None # 0,
+        self.pressl = None
+        self.pressr = None
+
+        self.ax.figure.canvas.mpl_connect('button_press_event', self.on_press)
+        self.ax.figure.canvas.mpl_connect('button_release_event', self.on_release)
+        self.ax.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
+
+
+    def on_press(self, event):
+        if event.inaxes != self.rect.axes: return
+        contains, attrd = self.rect.contains(event)
+        containsl, attrdl = self.rectl.contains(event)
+        containsr, attrdr = self.rectr.contains(event)
+        if contains:
+            x0, y0 = self.rect.xy
+            self.press = x0, y0, event.xdata, event.ydata
+        elif containsl:
+            xl, yl = self.rectl.xy
+            self.pressl = xl, yl, event.xdata, event.ydata
+        elif containsr:
+            xr, yr = self.rectr.xy
+            self.pressr = xr, yr, event.xdata, event.ydata
+        else:
+            return
+
+    def on_release(self, event):
+        # print ('release')
+        self.press = None
+        self.pressl = None
+        self.pressr = None
+        self.ax.figure.canvas.draw()
+
+    def on_motion(self, event):
+        'on motion we will move the rect if the mouse is over us'
+        if self.press is None and self.pressl is None and self.pressr is None: return
+        if event.inaxes != self.rect.axes and event.inaxes != self.rectl.axes and event.inaxes != self.rectr.axes: return
+
+        if self.press != None:
+            x0, y0, xpress, ypress = self.press
+            dx = event.xdata - xpress
+            self.rect_x = x0+dx
+            self.rect.set_x(self.rect_x)
+            self.rectl.set_x(self.rect_x-self.rectl.get_width())
+            self.rectr.set_x(self.rect_x+self.rect.get_width())
+            # self.rect.figure.canvas.draw()
+        elif self.pressl != None:
+            if event.xdata >= self.rectr.get_x()-0.1: return
+            xl, yl, xpress, ypress = self.pressl
+            dx = event.xdata - xpress
+            self.rectl.set_x(xl + dx - self.rectl.get_width())
+            # draw rect
+            self.rect.set_x(xl + dx)
+            xr = self.rectr.get_x()
+            recwidth = xr-xl-dx
+            self.rect.set_width(recwidth)
+            # self.rectl.figure.canvas.draw()
+        elif self.pressr != None:
+            if event.xdata <= self.rectl.get_x()+self.rectl.get_width()+0.1: return
+            xr, yr, xpress, ypress = self.pressr
+            dx = event.xdata - xpress
+            self.rectr.set_x(xr+dx)
+            # draw rect
+            xl = self.rectl.get_x()
+            recwidth = xr+dx - xl - self.rectl.get_width()
+            self.rect.set_width(recwidth)
+            # self.rectr.figure.canvas.draw()
+
+        self.rect.figure.canvas.draw()# why we just draw rect here, but rectl and rectr are drawed too ?
 
 class MyCanvas(FigureCanvas):
+    """这是一个窗口部件，即QWidget（当然也是FigureCanvasAgg）"""
+
+    def __init__(self, parent=None):  # , width=10, height=10, dpi=100):
+        self.fig = plt.figure(facecolor='lightblue', dpi=100) # 这里设置figsize没有用！
+        gs = gridspec.GridSpec(2, 1, height_ratios=[4, 1])
+        self.axes = plt.subplot(gs[0])
+        self.axes2 = plt.subplot(gs[1])
+
+        # self.axes = self.fig.add_subplot(211)
+        self.axes.set_ylabel("day price")
+        # self.axes.set_aspect(0.25)
+        # self.axes2 = self.fig.add_subplot(212)
+        # self.mycanvas2 = FigureCanvas(self.fig)
+        # self.axes2.set_aspect(0.1)
+        self.axes2.set_xticks([])#设置图2刻度为空
+        self.axes2.set_yticks([])
+        plt.subplots_adjust(left=0.08, bottom=0.02, right=0.98, top=0.98, wspace=None, hspace=0.2)
+        #
+        self.mycanvas = FigureCanvas(self.fig)
+        FigureCanvas.__init__(self, self.fig)  # ???
+        self.setParent(parent)  # ???
+        # FigureCanvas.updateGeometry(self)# ???
+
+        # parameters for computing
+        self.view_startx = 0  # the start x index of the current view window
+        self.zoomidx = 1
+        self.showindicator = True
+
+    # draw sin figure
+    def compute_initial_figure(self):
+        t = arange(0.0, 3.0, 0.01)
+        s = sin(2 * pi * t)
+        self.axes.plot(t, s)
+
+    # the scope of zoom rate is [1, 10], 1 = no zoom , 2 = zoom to 90% , 3 = to 80%, ... 10 = 10%
+    def drawfigure(self, dataframe):
+        plt.clf()
+        length1 = len(dataframe.index)
+
+        viewx = np.arange(0, length1, 1)
+        y = dataframe.iloc[:, 0]
+
+        # list the display label of x-axis
+        l1 = []
+        step = int(length1 / 5)  # 如果选择的日期数量少于step，则会出错
+        if step == 0:
+            return False
+
+        for i in np.arange(0, length1, step):
+            l1.append(dataframe.index[i])
+
+        plt.xlim(0, length1)
+        plt.xticks(np.arange(0, length1, step), l1)  # , rotation=30)
+        plt.ylabel('day price')
+        plt.plot(viewx, y, color='c')  # , linestyle='dashed', marker='o')
+        #
+        plt.grid()
+        self.draw()  # 在窗体内绘图，如果直接使用 plot.show()则会另外开启绘图窗口
+        return True
+
+    def drawindicator(self, dataframe):
+        od = dataframe
+        # list all the buy points and sell points
+        length = len(od.index)
+        l3x, l3y = [], []
+        l4x, l4y = [], []
+        for n in range(0, length):
+            if od.iloc[n, 3] != 0:
+                l3x.append(n)
+                l3y.append(od.iloc[n, 3])
+            if od.iloc[n, 4] != 0:
+                l4x.append(n)
+                l4y.append(od.iloc[n, 4])
+
+        # draw buy points
+        for i in range(0, len(l3x)):
+            plt.plot(l3x[i], l3y[i], 'r*')
+        # draw sell points
+        for i in range(0, len(l4x)):
+            plt.plot(l4x[i], l4y[i], 'kx')
+
+        self.draw()
+
+    # the scope of zoom rate is [1, 10], 1 = no zoom , 2 = zoom to 90% , 3 = to 80%, ... 10 = 10%
+    def drawfigure2(self, dataframe):
+        length1 = len(dataframe.index)
+        viewx = np.arange(0, length1, 1)
+        y = dataframe.iloc[:, 0]
+
+        # list the display label of x-axis
+        l1 = []
+        step = int(length1 / 5)  # 如果选择的日期数量少于step，则会出错
+        if step == 0:
+            return False
+
+        for i in np.arange(0, length1, step):
+            l1.append(dataframe.index[i])
+
+        # plt.xlim(0, length1)
+        # plt.xticks(np.arange(0, length1, step), l1)  # , rotation=30)
+        # plt.ylabel('day price')
+        self.axes.set_xlim(0, length1)
+        # self.axes.xticks(np.arange(0, length1, step), l1)
+        # self.axes.set_ylabes('day price')
+        self.axes.plot(viewx, y, color='c')
+        #
+        self.draw()  # 在窗体内绘图，如果直接使用 plot.show()则会另外开启绘图窗口
+        return True
+
+class MyCanvas2(FigureCanvas):
     """这是一个窗口部件，即QWidget（当然也是FigureCanvasAgg）"""
 
     def __init__(self, parent=None):  # , width=10, height=10, dpi=100):
@@ -90,7 +283,6 @@ class MyCanvas(FigureCanvas):
 
         self.draw()
 
-
 class ApplicationWindow(QMainWindow):
     def __init__(self):
         super(ApplicationWindow, self).__init__()
@@ -106,7 +298,7 @@ class ApplicationWindow(QMainWindow):
 
         self.mycanvas = MyCanvas(self)  # mainAppWindow.ui.mainWidget)#, width=5, height=4, dpi=100)
         self.ui.verticalLayout.addWidget(self.mycanvas)
-        # self.ui.loadstButton.setDisabled(True)
+        self.ui.loadstButton.setDisabled(True)
 
         self.dataframe = pd.DataFrame()
         self.originaldatalength = 0
@@ -132,7 +324,7 @@ class ApplicationWindow(QMainWindow):
             print("origin length is ", self.slidewindowsize)
 
             # draw the figure
-            self.mycanvas.drawfigure(self.dataframe)
+            self.mycanvas.drawfigure2(self.dataframe)
 
             # set buttons enable
             self.ui.loadstButton.setDisabled(False)
