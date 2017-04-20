@@ -6,7 +6,6 @@ import myMainWindow
 import datetime
 import pandas as pd
 import numpy as np
-from numpy import arange, sin, pi
 from selectPoliciesDlg import PoliciesDialog
 import deduceEarning as dE
 import drawGraph
@@ -38,17 +37,38 @@ class MyCanvas(FigureCanvas):
         # FigureCanvas.updateGeometry(self)# ???
 
         # parameters for computing
-        self.view_startx = 0  # the start x index of the current view window
-        self.zoomidx = 1
         self.showindicator = True
-
         self.dragrect = None
-    # draw sin figure
-    def compute_initial_figure(self):
-        pass
+
 
     # the scope of zoom rate is [1, 10], 1 = no zoom , 2 = zoom to 90% , 3 = to 80%, ... 10 = 10%
     def drawfigure1(self, dataframe):
+        self.axes.clear() # It's so hard i find this way to clear axes...
+
+        length1 = len(dataframe.index)
+
+        viewx = np.arange(0, length1, 1)
+        y = dataframe.iloc[:, 0]
+
+        # list the display label of x-axis
+        l1 = []
+        step = int(length1 / 5)  # 如果选择的日期数量少于step，则会出错
+        print( 'step = ', step , 'length = ', length1)
+        if step == 0:
+            return False
+
+        for i in np.arange(0, length1, step):
+            l1.append(dataframe.index[i])
+
+        self.axes.set_xlim(0, length1-1)
+        self.axes.set_xticks(np.arange(0, length1, step))
+        self.axes.set_xticklabels(l1)
+        self.axes.plot(viewx, y, color='c')
+
+        self.axes.grid()
+        self.draw()  # 在窗体内绘图，如果直接使用 plot.show()则会另外开启绘图窗口
+        return True
+    def drawfigure11(self, dataframe):
         self.axes.clear() # It's so hard i find this way to clear axes...
 
         length1 = len(dataframe.index)
@@ -73,7 +93,6 @@ class MyCanvas(FigureCanvas):
         self.axes.grid()
         self.draw()  # 在窗体内绘图，如果直接使用 plot.show()则会另外开启绘图窗口
         return True
-
     def drawindicator(self, dataframe):
         od = dataframe
         # list all the buy points and sell points
@@ -125,6 +144,7 @@ class ApplicationWindow(QMainWindow):
         self.mycanvas = MyCanvas(self)  # mainAppWindow.ui.mainWidget)#, width=5, height=4, dpi=100)
         self.mycanvas.mpl_connect('button_press_event', self.on_mousebutton_press)
         self.mycanvas.mpl_connect('button_release_event', self.on_mousebutton_release)
+        self.mycanvas.mpl_connect('motion_notify_event', self.on_rect_motion)
 
         self.ui.verticalLayout.addWidget(self.mycanvas)
         self.ui.loadstButton.setDisabled(True)
@@ -140,13 +160,14 @@ class ApplicationWindow(QMainWindow):
         self.mycanvas.dragrect.on_press(event)
 
     def on_mousebutton_release(self,event):
+        pass
+
+    def on_rect_motion(self,event):
         if event.inaxes != self.mycanvas.axes2: return
 
         # set data frame according to the drag rectangle datas
         x1 = self.mycanvas.dragrect.get_rect_x1()
         x2 = self.mycanvas.dragrect.get_rect_x2()
-
-        print(x1,x2,x2-x1)
 
         view_dateframe = self.dataframe.iloc[x1:x2, ]
         self.mycanvas.drawfigure1(view_dateframe)
@@ -186,33 +207,10 @@ class ApplicationWindow(QMainWindow):
             # set buttons enable
             self.ui.loadstButton.setDisabled(False)
             self.ui.iniButton.setDisabled(False)
-            self.ui.zoomInButton.setDisabled(False)
-            self.ui.zoomoutButton.setDisabled(False)
 
     def iniButtonClicked(self):
         self.mycanvas.drawfigure1(self.dataframe)
         self.mycanvas.dragrect.reset_full()
-
-    def zoomInButtonClicked(self):
-        if self.slidewindowsize > 10:
-            view_lenth = int(self.slidewindowsize * 8 / 10)
-            view_dateframe = self.dataframe.iloc[self.view_start:view_lenth - 1, ]
-            self.mycanvas.drawfigure1(view_dateframe)
-            self.slidewindowsize = view_lenth
-            self.ui.hslider.setRange(0, self.originaldatalength - view_lenth)
-            # set the dateEdit controller
-            self.setEditDate(view_dateframe.index[0], view_dateframe.index[-1])
-
-    def zoomoutButtonClicked(self):
-        self.view_start = 0
-        if self.slidewindowsize <= len(self.dataframe.index):
-            view_lenth = int(self.slidewindowsize * 12 / 10)
-            view_dateframe = self.dataframe.iloc[self.view_start:view_lenth, ]
-            self.mycanvas.drawfigure1(view_dateframe)
-            self.slidewindowsize = view_lenth
-            self.ui.hslider.setRange(0, self.originaldatalength - view_lenth)
-            # set the dateEdit controller
-            self.setEditDate(view_dateframe.index[0], view_dateframe.index[-1])
 
     def applyButtonClicked(self):
         pdlg = PoliciesDialog()
@@ -258,19 +256,6 @@ class ApplicationWindow(QMainWindow):
         for i in splist0:
             splist1.append(int(i))
         return bplist1, splist1
-
-    def slideWindowZoom(self):
-        pass
-
-    def windowSliding(self):
-        pos = self.ui.hslider.value()
-        print('slider pos = ', pos)
-        if pos + self.slidewindowsize <= self.originaldatalength + 1:
-            view_dateframe = self.dataframe.iloc[pos:pos + self.slidewindowsize, ]
-            self.mycanvas.drawfigure1(view_dateframe)
-            self.view_start = pos
-            # set the dateEdit controller
-            self.setEditDate(view_dateframe.index[0], view_dateframe.index[-1])
 
     # set the dateEdit controller
     def setEditDate(self, dfstr1, dfstr2):
