@@ -1,4 +1,5 @@
 import matplotlib
+
 matplotlib.use("Qt5Agg")
 
 import sys
@@ -13,20 +14,22 @@ import drawGraph
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtCore import QDate
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
+from PyQt5.QtCore import QDate, QDateTime
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QDateTimeEdit
+
 
 class MyCanvas(FigureCanvas):
     """Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
+
     def __init__(self, parent=None):
-        self.fig = plt.figure(facecolor='lightblue', dpi=100) # 这里设置figsize没有用！
+        self.fig = plt.figure(facecolor='lightblue', dpi=100)  # 这里设置figsize没有用！
         # 设置两个绘图区域，图像高度比例为4:1
         gs = gridspec.GridSpec(2, 1, height_ratios=[4, 1])
         self.axes = plt.subplot(gs[0])
         self.axes2 = plt.subplot(gs[1])
         # 设置区域的坐标属性
         self.axes.set_ylabel("day price")
-        self.axes2.set_xticks([])#设置图2刻度为空
+        self.axes2.set_xticks([])  # 设置图2刻度为空
         self.axes2.set_yticks([])
         # 调整画布的边界
         plt.subplots_adjust(left=0.08, bottom=0.02, right=0.98, top=0.98, wspace=None, hspace=0.2)
@@ -40,10 +43,9 @@ class MyCanvas(FigureCanvas):
         self.showindicator = True
         self.dragrect = None
 
-
     # the scope of zoom rate is [1, 10], 1 = no zoom , 2 = zoom to 90% , 3 = to 80%, ... 10 = 10%
     def drawfigure1(self, dataframe):
-        self.axes.clear() # It's so hard i find this way to clear axes...
+        self.axes.clear()  # It's so hard i find this way to clear axes...
 
         length1 = len(dataframe.index)
 
@@ -53,14 +55,14 @@ class MyCanvas(FigureCanvas):
         # list the display label of x-axis
         l1 = []
         step = int(length1 / 5)  # 如果选择的日期数量少于step，则会出错
-        print( 'step = ', step , 'length = ', length1)
+        # print('step = ', step, 'length = ', length1)
         if step == 0:
             return False
 
         for i in np.arange(0, length1, step):
             l1.append(dataframe.index[i])
 
-        self.axes.set_xlim(0, length1-1)
+        self.axes.set_xlim(0, length1 - 1)
         self.axes.set_xticks(np.arange(0, length1, step))
         self.axes.set_xticklabels(l1)
         self.axes.plot(viewx, y, color='c')
@@ -68,31 +70,22 @@ class MyCanvas(FigureCanvas):
         self.axes.grid()
         self.draw()  # 在窗体内绘图，如果直接使用 plot.show()则会另外开启绘图窗口
         return True
-    def drawfigure11(self, dataframe):
-        self.axes.clear() # It's so hard i find this way to clear axes...
+
+    # the scope of zoom rate is [1, 10], 1 = no zoom , 2 = zoom to 90% , 3 = to 80%, ... 10 = 10%
+    def drawfigure2(self, dataframe):
+        self.axes2.clear()
 
         length1 = len(dataframe.index)
 
         viewx = np.arange(0, length1, 1)
         y = dataframe.iloc[:, 0]
 
-        # list the display label of x-axis
-        l1 = []
-        step = int(length1 / 5)  # 如果选择的日期数量少于step，则会出错
-        if step == 0:
-            return False
-
-        for i in np.arange(0, length1, step):
-            l1.append(dataframe.index[i])
-
-        self.axes.set_xlim(0, length1-1)
-        self.axes.set_xticks(np.arange(0, length1, step))
-        self.axes.set_xticklabels(l1)
-        self.axes.plot(viewx, y, color='c')
-
-        self.axes.grid()
-        self.draw()  # 在窗体内绘图，如果直接使用 plot.show()则会另外开启绘图窗口
+        self.axes2.set_xlim(0, length1 - 1)
+        self.axes2.plot(viewx, y, color='lightgrey')
+        self.axes2.fill_between(viewx, y, color="lightgrey", alpha=0.8)
+        self.draw()
         return True
+
     def drawindicator(self, dataframe):
         od = dataframe
         # list all the buy points and sell points
@@ -116,18 +109,6 @@ class MyCanvas(FigureCanvas):
 
         self.draw()
 
-    # the scope of zoom rate is [1, 10], 1 = no zoom , 2 = zoom to 90% , 3 = to 80%, ... 10 = 10%
-    def drawfigure2(self, dataframe):
-        length1 = len(dataframe.index)
-
-        viewx = np.arange(0, length1, 1)
-        y = dataframe.iloc[:, 0]
-
-        self.axes2.set_xlim(0, length1-1)
-        self.axes2.plot(viewx, y, color='lightgrey')
-        self.draw()
-        return True
-
 class ApplicationWindow(QMainWindow):
     def __init__(self):
         super(ApplicationWindow, self).__init__()
@@ -136,9 +117,6 @@ class ApplicationWindow(QMainWindow):
         self.ui.setupUi(self)
         # parameters for computing
         self.targetDir = ''
-        self.view_start = 0  # the start index of the current view window
-        self.slidewindowsize = 10
-        self.zoomidx = 1
         self.showindicator = True
 
         self.mycanvas = MyCanvas(self)  # mainAppWindow.ui.mainWidget)#, width=5, height=4, dpi=100)
@@ -150,20 +128,19 @@ class ApplicationWindow(QMainWindow):
         self.ui.loadstButton.setDisabled(True)
 
         self.dataframe = pd.DataFrame()
-        self.originaldatalength = 0
         self.pdfile = 'config\\policyselections'
 
-    def on_mousebutton_press(self,event):
+    def on_mousebutton_press(self, event):
         if event.inaxes != self.mycanvas.axes2: return
-
-        # boxpoint = event.artist.get_bbox().get_points()
         self.mycanvas.dragrect.on_press(event)
 
-    def on_mousebutton_release(self,event):
+    def on_mousebutton_release(self, event):
         pass
 
-    def on_rect_motion(self,event):
+    def on_rect_motion(self, event):
         if event.inaxes != self.mycanvas.axes2: return
+        if self.dataframe.empty: return
+        if not self.mycanvas.dragrect.is_pressed(): return
 
         # set data frame according to the drag rectangle datas
         x1 = self.mycanvas.dragrect.get_rect_x1()
@@ -171,8 +148,9 @@ class ApplicationWindow(QMainWindow):
 
         view_dateframe = self.dataframe.iloc[x1:x2, ]
         self.mycanvas.drawfigure1(view_dateframe)
-        # set the dateEdit controller
-        self.setEditDate(self.dataframe.index[x1], self.dataframe.index[x2])
+
+        # set spinBox and labels
+        self.setSpinBox(x1, x2)
 
     def openButtonClicked(self):
         self.targetDir, filetype = QFileDialog.getOpenFileName(self,
@@ -180,6 +158,7 @@ class ApplicationWindow(QMainWindow):
                                                                'E:\\github\\my1stproj',
                                                                "All Files (*);;Text Files (*.txt)")  # 设置文件扩展名过滤,注意用双分号间隔
         if self.targetDir != '':
+
             # read the file data into memory
             self.dataframe = dE.readDailyData(self.targetDir)
             self.dataframe['buy'] = 0.0
@@ -194,12 +173,12 @@ class ApplicationWindow(QMainWindow):
             # set data frame according to the drag rectangle datas
             x1 = self.mycanvas.dragrect.get_rect_x1()
             x2 = self.mycanvas.dragrect.get_rect_x2()
-            print(x1,x2)
             view_dateframe = self.dataframe.iloc[x1:x2, ]
 
-            # set the dateEdit controller
-            print(self.dataframe.index[x1], self.dataframe.index[x2])
-            self.setEditDate(self.dataframe.index[x1], self.dataframe.index[x2])
+            # set the spinBox and labels
+            self.ui.spinBoxFrom.setMaximum(len(self.dataframe.index) - 6)
+            self.ui.spinBoxTo.setMaximum(len(self.dataframe.index) - 1)
+            self.setSpinBox(x1, x2)
 
             # draw the figure1
             self.mycanvas.drawfigure1(view_dateframe)
@@ -209,22 +188,23 @@ class ApplicationWindow(QMainWindow):
             self.ui.iniButton.setDisabled(False)
 
     def iniButtonClicked(self):
+        self.setSpinBox(0, len(self.dataframe.index) - 1)
         self.mycanvas.drawfigure1(self.dataframe)
-        self.mycanvas.dragrect.reset_full()
+        self.mycanvas.dragrect.reset_rects(0,len(self.dataframe.index) - 1)
 
     def applyButtonClicked(self):
         pdlg = PoliciesDialog()
         bpl, spl = self.getbuysellpoliceslist()
-        pdlg.ini_buyandsell_lists(dE.getbuypolicieslist(),bpl, dE.getsellpolicieslist(),spl)
+        pdlg.ini_buyandsell_lists(dE.getbuypolicieslist(), bpl, dE.getsellpolicieslist(), spl)
 
         if pdlg.exec_():
             buypl = pdlg.get_buy_pstrlist()
             str1 = ','.join(buypl)
             sellpl = pdlg.get_sell_pstrlist()
             str2 = ','.join(sellpl)
-            print(buypl,sellpl)
+            print(buypl, sellpl)
             if buypl and sellpl:
-                print("str",str1,str2)
+                print("str", str1, str2)
                 fd = open(self.pdfile, 'w')
                 fd.write(str1)
                 fd.write('\n')
@@ -233,12 +213,21 @@ class ApplicationWindow(QMainWindow):
         pdlg.destroy()
 
     def lookbackButtonClicked(self):
-        print('select from ', self.dataframe.index[self.view_start], ' to ',
-              self.dataframe.index[self.view_start + self.slidewindowsize - 1], self.slidewindowsize)
+        # view_start = self.mycanvas.dragrect.get_rect_x1()
+        # view_end = self.mycanvas.dragrect.get_rect_x2()
+        view_start = self.ui.spinBoxFrom.value()
+        view_end = self.ui.spinBoxTo.value()
+        print('select from ', self.dataframe.index[view_start], ' to ', self.dataframe.index[view_end])
+
         bpl, spl = self.getbuysellpoliceslist()
-        view_dateframe = self.dataframe.iloc[self.view_start:self.view_start + self.slidewindowsize - 1, ]
-        incomes = dE.runBackTrace(view_dateframe,bpl, spl)
+        view_dateframe = self.dataframe.iloc[view_start:view_end, ]
+        incomes = dE.runBackTrace(view_dateframe, bpl, spl)
+        self.mycanvas.drawfigure1(view_dateframe)  # for we can push this button many times.
         self.mycanvas.drawindicator(view_dateframe)
+        pro = (incomes - dE.mysa.inimoney) * 100 / dE.mysa.inimoney
+        tx = 'We get '+ str(incomes) + ' (' + str(pro) + '%) finally '
+
+        self.ui.labelResult.setText(tx)
         # print('look back', view_dateframe.head(10))
         print('---current income = ', incomes)
 
@@ -257,12 +246,32 @@ class ApplicationWindow(QMainWindow):
             splist1.append(int(i))
         return bplist1, splist1
 
-    # set the dateEdit controller
-    def setEditDate(self, dfstr1, dfstr2):
-        date1 = datetime.datetime.strptime(dfstr1, "%Y/%m/%d")
-        date2 = datetime.datetime.strptime(dfstr2, "%Y/%m/%d")
-        self.ui.dateEditFrom.setDate(QDate(date1.year, date1.month, date1.day))
-        self.ui.dateEditTo.setDate(QDate(date2.year, date2.month, date2.day))
+    def setSpinBox(self, x1, x2):
+        self.ui.spinBoxFrom.setValue(x1)
+        self.ui.spinBoxTo.setValue(x2)
+        self.ui.labelDateFrom.setText(self.dataframe.index[x1])
+        self.ui.labelDateTo.setText(self.dataframe.index[x2])
+
+    def fromOneDayChanged(self):
+        if self.dataframe.empty: return
+
+        v1 = self.ui.spinBoxFrom.value()
+        self.ui.labelDateFrom.setText(self.dataframe.index[v1])
+
+        v2 = self.ui.spinBoxTo.value()
+        view_dateframe = self.dataframe.iloc[v1:v2, ]
+        self.mycanvas.drawfigure1(view_dateframe)
+        self.mycanvas.dragrect.reset_rects(v1, v2)
+
+    def toOneDayChanged(self):
+        if self.dataframe.empty: return
+
+        v2 = self.ui.spinBoxTo.value()
+        self.ui.labelDateTo.setText(self.dataframe.index[v2])
+        v1 = self.ui.spinBoxFrom.value()
+        view_dateframe = self.dataframe.iloc[v1:v2, ]
+        self.mycanvas.drawfigure1(view_dateframe)
+        self.mycanvas.dragrect.reset_rects(v1, v2)
 
 
 if __name__ == '__main__':

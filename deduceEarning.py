@@ -11,9 +11,9 @@ def getbuypolicieslist():
     return buyplist
 
 def getsellpolicieslist():
-    sellplist = ['stop loss at',
+    sellplist = ['stop lossing',
                  'get profits after earning ',
-                 'sdown from hight']
+                 'go down from hight']
     return sellplist
 
 # read days data from cvs file
@@ -107,6 +107,7 @@ def runBackTrace(dataframe, buyplist, sellplist):
                 mysa.sellAction((todayopen + todayclose) / 2)
                 dataframe.iloc[t, 4] = (todayopen + todayclose) / 2
                 mysa.status = False
+                mysa.stocks = 0
                 print('--', todayopen, mysa.moneyihave)
         else:  # we can buy
             L1 = dataframe.iloc[i - predays:i, 0]
@@ -139,9 +140,9 @@ def runBackTrace(dataframe, buyplist, sellplist):
 # originData['buy'] = 0.0
 # originData['sell'] = 0.0
 # #print(originData.head(5))
-# #dataframe = originData.iloc[10:28,]
-# buypl = [1,0]
+# dataframe = originData.iloc[366:486,]
+# buypl = [1,1]
 # sellpl = [1,1,1]
-# incomes = runBackTrace(originData,buypl,sellpl)
+# incomes = runBackTrace(dataframe,buypl,sellpl)
 # #print(originData.head(30))
 # print('My profits = ', incomes)

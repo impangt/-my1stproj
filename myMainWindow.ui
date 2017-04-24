@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>752</width>
+    <width>796</width>
     <height>521</height>
    </rect>
   </property>
@@ -42,66 +42,15 @@
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="label">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>24</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>24</width>
-            <height>24</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>From</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QDateEdit" name="dateEditFrom">
+         <widget class="QPushButton" name="applyButton">
           <property name="maximumSize">
            <size>
             <width>100</width>
             <height>25</height>
            </size>
           </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_2">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>24</width>
-            <height>24</height>
-           </size>
-          </property>
           <property name="text">
-           <string>To</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QDateEdit" name="dateEditTo">
-          <property name="maximumSize">
-           <size>
-            <width>100</width>
-            <height>25</height>
-           </size>
+           <string>Set Strategy</string>
           </property>
          </widget>
         </item>
@@ -128,7 +77,48 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="applyButton">
+         <widget class="QLabel" name="labelDateFrom">
+          <property name="minimumSize">
+           <size>
+            <width>70</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="layoutDirection">
+           <enum>Qt::LeftToRight</enum>
+          </property>
+          <property name="text">
+           <string>Date From</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="spinBoxFrom">
+          <property name="maximumSize">
+           <size>
+            <width>40</width>
+            <height>25</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="labelDateTo">
+          <property name="minimumSize">
+           <size>
+            <width>70</width>
+            <height>25</height>
+           </size>
+          </property>
           <property name="maximumSize">
            <size>
             <width>100</width>
@@ -136,23 +126,20 @@
            </size>
           </property>
           <property name="text">
-           <string>Set Strategy</string>
+           <string>Date To</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="loadstButton">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
+         <widget class="QSpinBox" name="spinBoxTo">
           <property name="maximumSize">
            <size>
-            <width>80</width>
+            <width>40</width>
             <height>25</height>
            </size>
-          </property>
-          <property name="text">
-           <string>computing</string>
           </property>
          </widget>
         </item>
@@ -169,6 +156,25 @@
           </property>
          </spacer>
         </item>
+        <item>
+         <widget class="QPushButton" name="loadstButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>80</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>computing</string>
+          </property>
+          <property name="autoRepeat">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>
@@ -177,7 +183,7 @@
          <number>10</number>
         </property>
         <property name="sizeConstraint">
-         <enum>QLayout::SetDefaultConstraint</enum>
+         <enum>QLayout::SetMinimumSize</enum>
         </property>
         <item>
          <spacer name="horizontalSpacer">
@@ -196,7 +202,7 @@
          </spacer>
         </item>
         <item>
-         <widget class="QLabel" name="label_3">
+         <widget class="QLabel" name="labelResult">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -218,8 +224,11 @@
           <property name="autoFillBackground">
            <bool>false</bool>
           </property>
+          <property name="frameShadow">
+           <enum>QFrame::Plain</enum>
+          </property>
           <property name="text">
-           <string>TextLabel adfadf  afadfa  adfadfaadafa TextLabel adfadf </string>
+           <string>Hello, welcome to my analysis system</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
@@ -256,7 +265,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>752</width>
+     <width>796</width>
      <height>23</height>
     </rect>
    </property>
@@ -299,7 +308,7 @@
    <slot>applyButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>453</x>
+     <x>171</x>
      <y>156</y>
     </hint>
     <hint type="destinationlabel">
@@ -315,7 +324,7 @@
    <slot>lookbackButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>534</x>
+     <x>518</x>
      <y>156</y>
     </hint>
     <hint type="destinationlabel">
@@ -331,12 +340,44 @@
    <slot>iniButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>367</x>
+     <x>247</x>
      <y>158</y>
     </hint>
     <hint type="destinationlabel">
      <x>358</x>
      <y>237</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxFrom</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>fromOneDayChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>621</x>
+     <y>143</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>604</x>
+     <y>178</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxTo</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>toOneDayChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>723</x>
+     <y>148</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>697</x>
+     <y>174</y>
     </hint>
    </hints>
   </connection>
@@ -347,9 +388,8 @@
   <slot>applyButtonClicked()</slot>
   <slot>lookbackButtonClicked()</slot>
   <slot>slideWindowZoom()</slot>
-  <slot>windowSliding()</slot>
-  <slot>zoomInButtonClicked()</slot>
-  <slot>zoomoutButtonClicked()</slot>
   <slot>iniButtonClicked()</slot>
+  <slot>fromOneDayChanged()</slot>
+  <slot>toOneDayChanged()</slot>
  </slots>
 </ui>

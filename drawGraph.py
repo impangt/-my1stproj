@@ -25,8 +25,6 @@ class DraggableRectangle(object):
         self.ax.figure.canvas.mpl_connect('button_release_event', self.on_release)
         self.ax.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
 
-        # self.reset_right()
-
     def on_press(self, event):
         if event.inaxes != self.rect.axes: return
 
@@ -61,7 +59,7 @@ class DraggableRectangle(object):
         if self.press != None:
             x0, y0, xpress, ypress = self.press
             dx = event.xdata - xpress
-            rectl_x = x0 + dx  - self.rectl.get_width()
+            rectl_x = x0 + dx - self.rectl.get_width()
 
             # to tell the left edge overriding
             if rectl_x < 0:
@@ -96,7 +94,7 @@ class DraggableRectangle(object):
             rectwidth = xr - rectl_x - self.rectl.get_width()
             # self.rectl.figure.canvas.draw()
         elif self.pressr != None:
-            if event.xdata <= self.rect_x + 10:
+            if event.xdata <= self.rectl.get_x()+self.rectl.get_width() + 10:
                 self.rect_width = 10
                 return
 
@@ -118,30 +116,33 @@ class DraggableRectangle(object):
         self.rect.set_width(rectwidth)
         self.rect_width = rectwidth
         self.ax.figure.canvas.draw()
-        # self.rect.figure.canvas.draw()  # why we just draw rect here, but rectl and rectr are drawed too ?
+        # self.rectl.figure.canvas.draw()  # why we just draw rect here, but rectl and rectr are drawed too ?
 
-    def reset_left(self):
-        self.rectl.set_x(0.0)
-        self.rect_x = self.rectl.get_width()
-        self.rect.set_x(self.rect_x)
-        self.rectr.set_x(self.rect_x + self.rect_width)
-
-    def reset_right(self):
+    def reset_rects(self, xl, xr):
         xlim = self.ax.get_xlim()[1]
-        self.rectr.set_x(xlim - self.rectl.get_width())
-        self.rect_x = xlim - self.rectl.get_width()-self.rect_width
-        self.rect.set_x(self.rect_x)
-        self.rectl.set_x(self.rect_x - self.rectl.get_width())
+        if xr > xlim: return
+        if xl < 0: return
 
-    def reset_full(self):
-        self.rectl.set_x(0.0)
-        xlim = self.ax.get_xlim()[1]
-        self.rect_x = self.rectl.get_width()
+        self.rectl.set_x(xl)
+        self.rectr.set_x(xr-self.rectr.get_width())
+        self.rect_x = xl + self.rectl.get_width()
         self.rect.set_x(self.rect_x)
-        self.rectr.set_x(xlim - self.rectl.get_width())
-        self.rect_width = xlim - self.rectl.get_width() - self.rect_x
+        self.rect_width = xr-self.rectr.get_width()-self.rect_x
         self.rect.set_width(self.rect_width)
         self.ax.figure.canvas.draw()
+
+
+    def is_pressed(self):
+        r = 0
+        if self.press :
+            r = 1
+        elif self.pressl:
+            r = 2
+        elif self.pressr:
+            r = 3
+        else:
+            r = 0
+        return r
 
     def get_rect_x1(self):
         return int(self.rectl.get_x())
@@ -149,10 +150,10 @@ class DraggableRectangle(object):
     def get_rect_x2(self):
         return int(self.rectr.get_x()+self.rectr.get_width())
 
-        # t = np.arange(0, 8, .01)
-        # s = np.sin(3 * np.pi * t)
-        # plt.plot(t,s)
-        #
-        # plt.axis([0, 2, 0, 2])
-        # a = DraggableRectangle()
-        # plt.show()
+    # t = np.arange(0, 8, .01)
+    # s = np.sin(3 * np.pi * t)
+    # plt.plot(t,s)
+    #
+    # plt.axis([0, 2, 0, 2])
+    # a = DraggableRectangle()
+    # plt.show()
