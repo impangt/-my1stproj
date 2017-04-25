@@ -45,7 +45,7 @@ class StockAccount:
         return self.status
 
     # get ini file data
-    def getinidata(self,filename ):
+    def getinidata(self,filename='config\\config.ini'):
         config = configparser.ConfigParser()
         try:
             config.read_file(open(filename))

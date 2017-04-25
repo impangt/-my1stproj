@@ -13,6 +13,7 @@ import drawGraph
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from matplotlib.widgets import Cursor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtCore import QDate, QDateTime
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QDateTimeEdit
@@ -65,7 +66,7 @@ class MyCanvas(FigureCanvas):
         self.axes.set_xlim(0, length1 - 1)
         self.axes.set_xticks(np.arange(0, length1, step))
         self.axes.set_xticklabels(l1)
-        self.axes.plot(viewx, y, color='c')
+        self.axes.plot(viewx, y, 'c') #color='c')
 
         self.axes.grid()
         self.draw()  # 在窗体内绘图，如果直接使用 plot.show()则会另外开启绘图窗口
@@ -93,12 +94,12 @@ class MyCanvas(FigureCanvas):
         l3x, l3y = [], []
         l4x, l4y = [], []
         for n in range(0, length):
-            if od.iloc[n, 3] != 0:
+            if od.iloc[n, 6] != 0: # buy colunm
                 l3x.append(n)
-                l3y.append(od.iloc[n, 3])
-            if od.iloc[n, 4] != 0:
+                l3y.append(od.iloc[n, 6])
+            if od.iloc[n, 7] != 0: # sell colunm
                 l4x.append(n)
-                l4y.append(od.iloc[n, 4])
+                l4y.append(od.iloc[n, 7])
 
         # draw buy points
         for i in range(0, len(l3x)):
@@ -122,40 +123,57 @@ class ApplicationWindow(QMainWindow):
         self.mycanvas = MyCanvas(self)  # mainAppWindow.ui.mainWidget)#, width=5, height=4, dpi=100)
         self.mycanvas.mpl_connect('button_press_event', self.on_mousebutton_press)
         self.mycanvas.mpl_connect('button_release_event', self.on_mousebutton_release)
-        self.mycanvas.mpl_connect('motion_notify_event', self.on_rect_motion)
+        self.mycanvas.mpl_connect('motion_notify_event', self.on_cursor_motion)
 
         self.ui.verticalLayout.addWidget(self.mycanvas)
         self.ui.loadstButton.setDisabled(True)
 
         self.dataframe = pd.DataFrame()
         self.pdfile = 'config\\policyselections'
+        self.cursor = None
+
 
     def on_mousebutton_press(self, event):
         if event.inaxes != self.mycanvas.axes2: return
         self.mycanvas.dragrect.on_press(event)
 
     def on_mousebutton_release(self, event):
+        # if event.inaxes != self.mycanvas.axes: return
+        # if self.dataframe.empty: return
+        #
+        # # get cursor positions
+        # print (event.button, event.x, event.y, event.xdata, event.ydata)
         pass
 
-    def on_rect_motion(self, event):
-        if event.inaxes != self.mycanvas.axes2: return
+    def on_cursor_motion(self, event):
         if self.dataframe.empty: return
-        if not self.mycanvas.dragrect.is_pressed(): return
 
-        # set data frame according to the drag rectangle datas
-        x1 = self.mycanvas.dragrect.get_rect_x1()
-        x2 = self.mycanvas.dragrect.get_rect_x2()
+        if event.inaxes == self.mycanvas.axes2:
+            if not self.mycanvas.dragrect.is_pressed(): return
 
-        view_dateframe = self.dataframe.iloc[x1:x2, ]
-        self.mycanvas.drawfigure1(view_dateframe)
+            # set data frame according to the drag rectangle datas
+            x1 = self.mycanvas.dragrect.get_rect_x1()
+            x2 = self.mycanvas.dragrect.get_rect_x2()
 
-        # set spinBox and labels
-        self.setSpinBox(x1, x2)
+            view_dateframe = self.dataframe.iloc[x1:x2, ]
+            self.mycanvas.drawfigure1(view_dateframe)
+
+            # set spinBox and labels
+            self.setSpinBox(x1, x2)
+        elif event.inaxes == self.mycanvas.axes:
+            cx = int(event.xdata) + self.ui.spinBoxFrom.value()
+            txt = self.dataframe.index[cx]+" open:" + str(self.dataframe.iloc[cx, 0])\
+                  + " high:" + str(self.dataframe.iloc[cx, 1]) \
+                  + " low:" + str(self.dataframe.iloc[cx, 2]) \
+                  + " close:" + str(self.dataframe.iloc[cx, 3])
+            self.ui.labelX.setText(txt)
+        else:
+            return
 
     def openButtonClicked(self):
         self.targetDir, filetype = QFileDialog.getOpenFileName(self,
                                                                "选取文件",
-                                                               'E:\\github\\my1stproj',
+                                                               'D:\\github\\my1stproj\\data',
                                                                "All Files (*);;Text Files (*.txt)")  # 设置文件扩展名过滤,注意用双分号间隔
         if self.targetDir != '':
 
@@ -192,6 +210,19 @@ class ApplicationWindow(QMainWindow):
         self.mycanvas.drawfigure1(self.dataframe)
         self.mycanvas.dragrect.reset_rects(0,len(self.dataframe.index) - 1)
 
+    def cursorButtonClicked(self):
+        # self.mycanvas.mpl_disconnect('motion_notify_event')
+        tx = self.ui.buttonCursor.text()
+        if tx == "+":
+            if self.cursor == None:
+                self.cursor = Cursor(self.mycanvas.axes, useblit=True, color='red', linewidth=1)
+            self.cursor.visible = True
+            self.mycanvas.draw()
+            self.ui.buttonCursor.setText("-")
+        elif tx == '-':
+            self.cursor.visible = False
+            self.ui.buttonCursor.setText("+")
+
     def applyButtonClicked(self):
         pdlg = PoliciesDialog()
         bpl, spl = self.getbuysellpoliceslist()
@@ -213,8 +244,6 @@ class ApplicationWindow(QMainWindow):
         pdlg.destroy()
 
     def lookbackButtonClicked(self):
-        # view_start = self.mycanvas.dragrect.get_rect_x1()
-        # view_end = self.mycanvas.dragrect.get_rect_x2()
         view_start = self.ui.spinBoxFrom.value()
         view_end = self.ui.spinBoxTo.value()
         print('select from ', self.dataframe.index[view_start], ' to ', self.dataframe.index[view_end])
@@ -225,17 +254,18 @@ class ApplicationWindow(QMainWindow):
         self.mycanvas.drawfigure1(view_dateframe)  # for we can push this button many times.
         self.mycanvas.drawindicator(view_dateframe)
         pro = (incomes - dE.mysa.inimoney) * 100 / dE.mysa.inimoney
+        # format the output value
+        pro = '{:.2f}'.format(pro)
+        incomes = '{:.2f}'.format(incomes)
         tx = 'We get '+ str(incomes) + ' (' + str(pro) + '%) finally '
 
         self.ui.labelResult.setText(tx)
-        # print('look back', view_dateframe.head(10))
-        print('---current income = ', incomes)
 
     # read selected policies from file
     def getbuysellpoliceslist(self):
         fd = open(self.pdfile)
         lines = fd.readlines()
-        print(lines)
+        # print(lines)
         bplist0 = lines[0].strip('\n').split(',')
         splist0 = lines[1].split(',')
         bplist1 = []
@@ -262,6 +292,7 @@ class ApplicationWindow(QMainWindow):
         view_dateframe = self.dataframe.iloc[v1:v2, ]
         self.mycanvas.drawfigure1(view_dateframe)
         self.mycanvas.dragrect.reset_rects(v1, v2)
+        self.ui.labelDays.setText(str(v2-v1+1)+' Days')
 
     def toOneDayChanged(self):
         if self.dataframe.empty: return
@@ -272,6 +303,7 @@ class ApplicationWindow(QMainWindow):
         view_dateframe = self.dataframe.iloc[v1:v2, ]
         self.mycanvas.drawfigure1(view_dateframe)
         self.mycanvas.dragrect.reset_rects(v1, v2)
+        self.ui.labelDays.setText(str(v2 - v1 + 1))
 
 
 if __name__ == '__main__':

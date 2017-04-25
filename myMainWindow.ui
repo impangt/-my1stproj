@@ -42,19 +42,6 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="applyButton">
-          <property name="maximumSize">
-           <size>
-            <width>100</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Set Strategy</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QPushButton" name="iniButton">
           <property name="enabled">
            <bool>false</bool>
@@ -73,6 +60,28 @@
           </property>
           <property name="text">
            <string>I</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="buttonCursor">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>40</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>+</string>
           </property>
          </widget>
         </item>
@@ -144,6 +153,25 @@
          </widget>
         </item>
         <item>
+         <widget class="QLabel" name="labelDays">
+          <property name="minimumSize">
+           <size>
+            <width>50</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>50</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>  xx Days</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="horizontalSpacer_2">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -151,10 +179,23 @@
           <property name="sizeHint" stdset="0">
            <size>
             <width>40</width>
-            <height>20</height>
+            <height>25</height>
            </size>
           </property>
          </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="applyButton">
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Set Strategy</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QPushButton" name="loadstButton">
@@ -238,6 +279,44 @@
           </property>
          </widget>
         </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>10</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="labelX">
+          <property name="minimumSize">
+           <size>
+            <width>80</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>10000</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>  x value</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignBottom|Qt::AlignRight|Qt::AlignTrailing</set>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>
@@ -308,8 +387,8 @@
    <slot>applyButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>171</x>
-     <y>156</y>
+     <x>703</x>
+     <y>158</y>
     </hint>
     <hint type="destinationlabel">
      <x>597</x>
@@ -324,8 +403,8 @@
    <slot>lookbackButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>518</x>
-     <y>156</y>
+     <x>784</x>
+     <y>158</y>
     </hint>
     <hint type="destinationlabel">
      <x>576</x>
@@ -340,7 +419,7 @@
    <slot>iniButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>247</x>
+     <x>131</x>
      <y>158</y>
     </hint>
     <hint type="destinationlabel">
@@ -356,8 +435,8 @@
    <slot>fromOneDayChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>621</x>
-     <y>143</y>
+     <x>299</x>
+     <y>158</y>
     </hint>
     <hint type="destinationlabel">
      <x>604</x>
@@ -372,12 +451,28 @@
    <slot>toOneDayChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>723</x>
-     <y>148</y>
+     <x>421</x>
+     <y>158</y>
     </hint>
     <hint type="destinationlabel">
      <x>697</x>
      <y>174</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonCursor</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>cursorButtonClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>158</x>
+     <y>143</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>169</x>
+     <y>171</y>
     </hint>
    </hints>
   </connection>
@@ -387,9 +482,9 @@
   <slot>loadButtonClicked()</slot>
   <slot>applyButtonClicked()</slot>
   <slot>lookbackButtonClicked()</slot>
-  <slot>slideWindowZoom()</slot>
   <slot>iniButtonClicked()</slot>
   <slot>fromOneDayChanged()</slot>
   <slot>toOneDayChanged()</slot>
+  <slot>cursorButtonClicked()</slot>
  </slots>
 </ui>
