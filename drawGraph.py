@@ -65,8 +65,9 @@ class DraggableRectangle(object):
             if rectl_x < 0:
                 rectl_x = 0
             # to tell the right edge overriding
-            if rectl_x + self.rectl.get_width() + rectwidth + self.rectr.get_width() > self.ax.get_xlim()[1]:
-                rectl_x = self.rect_x - self.rectl.get_width()
+            if rectl_x + self.rectl.get_width() + rectwidth + self.rectr.get_width() > self.ax.get_xlim()[1] - 1:
+                rectl_x = self.ax.get_xlim()[1] - rectwidth - self.rectr.get_width() - self.rectl.get_width()
+                print("self.ax.get_xlim()[1]=", self.ax.get_xlim()[1]," rectLx=", rectl_x)
 
             self.rect_x = rectl_x + self.rectl.get_width()
             self.rect.set_x(self.rect_x)
@@ -104,6 +105,7 @@ class DraggableRectangle(object):
 
             # to tell the right edge overriding
             xlim = self.ax.get_xlim()[1]
+            print('xlim=',xlim)
             if rectr_x + self.rectr.get_width() > xlim:
                 self.rect_width = xlim -self.rectl.get_x() - self.rectl.get_width()
                 rectr_x = xlim - self.rectr.get_width()
@@ -148,7 +150,7 @@ class DraggableRectangle(object):
         return int(self.rectl.get_x())
 
     def get_rect_x2(self):
-        return int(self.rectr.get_x()+self.rectr.get_width())
+        return int(self.rectr.get_x()+self.rectr.get_width()-1)
 
     # t = np.arange(0, 8, .01)
     # s = np.sin(3 * np.pi * t)

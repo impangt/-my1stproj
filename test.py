@@ -1,17 +1,39 @@
-from matplotlib.widgets import Cursor
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
+# Random test data
+np.random.seed(123)
+# all_data = [np.random.normal(0, std, 100) for std in range(1, 4)]
+all_data = [np.random.normal(0, std, 100) for std in range(1, 4)]
 
-fig = plt.figure(figsize=(8, 6))
-ax = fig.add_subplot(111, facecolor='#FFFFCC')
+fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(9, 4))
 
-x, y = 4*(np.random.rand(2, 100) - .5)
-ax.plot(x, y, 'o')
-ax.set_xlim(-2, 2)
-ax.set_ylim(-2, 2)
+# rectangular box plot
+bplot1 = axes[0].boxplot(all_data,
+                         vert=True,   # vertical box aligmnent
+                         patch_artist=True)   # fill with color
 
-# set useblit = True on gtkagg for enhanced performance
-cursor = Cursor(ax, useblit=True, color='red', linewidth=2)
+# notch shape box plot
+bplot2 = axes[1].boxplot(all_data,
+                         notch=True,  # notch shape
+                         vert=True,   # vertical box aligmnent
+                         patch_artist=True)   # fill with color
+
+# fill with colors
+# colors = ['pink', 'lightblue', 'lightgreen']
+# for bplot in (bplot1, bplot2):
+#     for patch, color in zip(bplot['boxes'], colors):
+#         patch.set_facecolor(color)
+
+# adding horizontal grid lines
+for ax in axes:
+    ax.yaxis.grid(True)
+    ax.set_xticks([y+1 for y in range(len(all_data))], )
+    ax.set_xlabel('xlabel')
+    ax.set_ylabel('ylabel')
+
+# add x-tick labels
+plt.setp(axes, xticks=[y+1 for y in range(len(all_data))],
+         xticklabels=['x1', 'x2', 'x3', 'x4'])
 
 plt.show()

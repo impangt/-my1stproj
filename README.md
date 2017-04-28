@@ -10,5 +10,8 @@ this project is going to set up a China stocks data ananlysis system using pytho
 1. replace the QDateEdit to QSpinBox.
 2. modify some bugs
 3. version 0.1 is ready!
+[2017/04/28]
+1. Add candle figure, but it's too slow when draggng, so I just add a button to show candle figure if we need.
+2. Add cursor feature
 
 

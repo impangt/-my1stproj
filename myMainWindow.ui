@@ -86,6 +86,28 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="buttonK">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>40</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>K</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QLabel" name="labelDateFrom">
           <property name="minimumSize">
            <size>
@@ -435,7 +457,7 @@
    <slot>fromOneDayChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>299</x>
+     <x>345</x>
      <y>158</y>
     </hint>
     <hint type="destinationlabel">
@@ -451,7 +473,7 @@
    <slot>toOneDayChanged()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>421</x>
+     <x>467</x>
      <y>158</y>
     </hint>
     <hint type="destinationlabel">
@@ -476,6 +498,22 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>buttonK</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>kButtonClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>206</x>
+     <y>143</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>209</x>
+     <y>198</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>openButtonClicked()</slot>
@@ -486,5 +524,6 @@
   <slot>fromOneDayChanged()</slot>
   <slot>toOneDayChanged()</slot>
   <slot>cursorButtonClicked()</slot>
+  <slot>kButtonClicked()</slot>
  </slots>
 </ui>

@@ -4,7 +4,6 @@ matplotlib.use("Qt5Agg")
 
 import sys
 import myMainWindow
-import datetime
 import pandas as pd
 import numpy as np
 from selectPoliciesDlg import PoliciesDialog
@@ -45,13 +44,60 @@ class MyCanvas(FigureCanvas):
         self.dragrect = None
 
     # the scope of zoom rate is [1, 10], 1 = no zoom , 2 = zoom to 90% , 3 = to 80%, ... 10 = 10%
+    def drawfigureK(self, dataframe):
+        self.axes.clear()  # It's so hard i find this way to clear axes...
+        length1 = len(dataframe.index)
+        # print("drawfigure1 len=", length1)
+
+        # list the display label of x-axis
+        l1 = []
+        step = int(length1 / 5)  # 如果选择的日期数量少于step，则会出错
+        # print('step = ', step, 'length = ', length1)
+        if step == 0:
+            return False
+
+        for i in np.arange(0, length1, step):
+            l1.append(dataframe.index[i])
+
+        self.axes.set_xlim(0, length1)
+        self.axes.set_xticks(np.arange(0, length1, step))
+        self.axes.set_xticklabels(l1)
+
+        # draw candle figure
+        for i in range(0, length1):
+            openp = dataframe.iloc[i, 0]
+            highp = dataframe.iloc[i, 1]
+            lowp  = dataframe.iloc[i, 2]
+            closep= dataframe.iloc[i, 3]
+            w = 0.6
+            col = ''
+            #draw rect first
+            rectx = [i-w/2, i+w/2, i+w/2, i-w/2, i-w/2]
+            recty = [closep, closep, openp, openp, closep]
+            if closep < openp:
+                col = 'g'
+                #draw up and down lines
+                lx = [i, i]
+                l1y = [highp, openp]
+                l2y = [closep, lowp]
+            else:
+                col = 'r'
+                #draw up and down lines
+                lx = [i, i]
+                l1y = [highp, closep]
+                l2y = [openp, lowp]
+            self.axes.plot(rectx, recty, col)
+            self.axes.plot(lx, l1y, col)
+            self.axes.plot(lx, l2y, col)
+
+        self.axes.grid()
+        self.draw()  # 在窗体内绘图，如果直接使用 plot.show()则会另外开启绘图窗口
+        return True
+
     def drawfigure1(self, dataframe):
         self.axes.clear()  # It's so hard i find this way to clear axes...
-
         length1 = len(dataframe.index)
-
         viewx = np.arange(0, length1, 1)
-        y = dataframe.iloc[:, 0]
 
         # list the display label of x-axis
         l1 = []
@@ -66,7 +112,12 @@ class MyCanvas(FigureCanvas):
         self.axes.set_xlim(0, length1 - 1)
         self.axes.set_xticks(np.arange(0, length1, step))
         self.axes.set_xticklabels(l1)
-        self.axes.plot(viewx, y, 'c') #color='c')
+
+        y1 = dataframe.iloc[:, 0] # open price
+        # y2 = dataframe.iloc[:, 3] # close price
+
+        self.axes.plot(viewx, y1, 'c') #color='c'
+        # self.axes.plot(viewx, y2, 'b')
 
         self.axes.grid()
         self.draw()  # 在窗体内绘图，如果直接使用 plot.show()则会另外开启绘图窗口
@@ -81,7 +132,7 @@ class MyCanvas(FigureCanvas):
         viewx = np.arange(0, length1, 1)
         y = dataframe.iloc[:, 0]
 
-        self.axes2.set_xlim(0, length1 - 1)
+        self.axes2.set_xlim(0, length1)
         self.axes2.plot(viewx, y, color='lightgrey')
         self.axes2.fill_between(viewx, y, color="lightgrey", alpha=0.8)
         self.draw()
@@ -155,20 +206,23 @@ class ApplicationWindow(QMainWindow):
             x1 = self.mycanvas.dragrect.get_rect_x1()
             x2 = self.mycanvas.dragrect.get_rect_x2()
 
-            view_dateframe = self.dataframe.iloc[x1:x2, ]
+            view_dateframe = self.dataframe.iloc[x1:x2+1, ]
             self.mycanvas.drawfigure1(view_dateframe)
 
             # set spinBox and labels
             self.setSpinBox(x1, x2)
         elif event.inaxes == self.mycanvas.axes:
-            cx = int(event.xdata) + self.ui.spinBoxFrom.value()
-            txt = self.dataframe.index[cx]+" open:" + str(self.dataframe.iloc[cx, 0])\
-                  + " high:" + str(self.dataframe.iloc[cx, 1]) \
-                  + " low:" + str(self.dataframe.iloc[cx, 2]) \
-                  + " close:" + str(self.dataframe.iloc[cx, 3])
-            self.ui.labelX.setText(txt)
-        else:
-            return
+            xdata = int(event.xdata)
+            if xdata == 0:
+                print('xdata = ', event.xdata)
+            if (event.xdata > xdata - 0.3) and (event.xdata < xdata + 0.3):
+                cx = xdata + self.ui.spinBoxFrom.value()
+                txt = self.dataframe.index[cx]+" open:" + str(self.dataframe.iloc[cx, 0])\
+                      + " high:" + str(self.dataframe.iloc[cx, 1]) \
+                      + " low:" + str(self.dataframe.iloc[cx, 2]) \
+                      + " close:" + str(self.dataframe.iloc[cx, 3])
+                self.ui.labelX.setText(txt)
+        return
 
     def openButtonClicked(self):
         self.targetDir, filetype = QFileDialog.getOpenFileName(self,
@@ -191,7 +245,8 @@ class ApplicationWindow(QMainWindow):
             # set data frame according to the drag rectangle datas
             x1 = self.mycanvas.dragrect.get_rect_x1()
             x2 = self.mycanvas.dragrect.get_rect_x2()
-            view_dateframe = self.dataframe.iloc[x1:x2, ]
+            view_dateframe = self.dataframe.iloc[x1:x2+1, ] # be careful the bundage
+            # print('view_dataframe ---',x1, x2, self.dataframe.index[-1])
 
             # set the spinBox and labels
             self.ui.spinBoxFrom.setMaximum(len(self.dataframe.index) - 6)
@@ -233,7 +288,7 @@ class ApplicationWindow(QMainWindow):
             str1 = ','.join(buypl)
             sellpl = pdlg.get_sell_pstrlist()
             str2 = ','.join(sellpl)
-            print(buypl, sellpl)
+            # print(buypl, sellpl)
             if buypl and sellpl:
                 print("str", str1, str2)
                 fd = open(self.pdfile, 'w')
@@ -249,9 +304,13 @@ class ApplicationWindow(QMainWindow):
         print('select from ', self.dataframe.index[view_start], ' to ', self.dataframe.index[view_end])
 
         bpl, spl = self.getbuysellpoliceslist()
-        view_dateframe = self.dataframe.iloc[view_start:view_end, ]
+        view_dateframe = self.dataframe.iloc[view_start:view_end+1, ]
         incomes = dE.runBackTrace(view_dateframe, bpl, spl)
-        self.mycanvas.drawfigure1(view_dateframe)  # for we can push this button many times.
+        # self.mycanvas.drawfigure1(view_dateframe)  # for we can push this button many times.
+        if self.ui.buttonK.text() == "L":
+            self.mycanvas.drawfigureK(view_dateframe)
+        else:
+            self.mycanvas.drawfigure1(view_dateframe)
         self.mycanvas.drawindicator(view_dateframe)
         pro = (incomes - dE.mysa.inimoney) * 100 / dE.mysa.inimoney
         # format the output value
@@ -289,10 +348,14 @@ class ApplicationWindow(QMainWindow):
         self.ui.labelDateFrom.setText(self.dataframe.index[v1])
 
         v2 = self.ui.spinBoxTo.value()
-        view_dateframe = self.dataframe.iloc[v1:v2, ]
+        view_dateframe = self.dataframe.iloc[v1:v2+1, ]
         self.mycanvas.drawfigure1(view_dateframe)
-        self.mycanvas.dragrect.reset_rects(v1, v2)
-        self.ui.labelDays.setText(str(v2-v1+1)+' Days')
+        self.ui.labelDays.setText(str(v2 - v1 + 1) + ' Days')
+        if self.ui.buttonK.text() != "K":
+            self.ui.buttonK.setText("K")
+        # if mouse button is pressed in dragerect, then don't draw the dragrect again!!
+        if not self.mycanvas.dragrect.is_pressed():
+            self.mycanvas.dragrect.reset_rects(v1, v2)
 
     def toOneDayChanged(self):
         if self.dataframe.empty: return
@@ -300,10 +363,31 @@ class ApplicationWindow(QMainWindow):
         v2 = self.ui.spinBoxTo.value()
         self.ui.labelDateTo.setText(self.dataframe.index[v2])
         v1 = self.ui.spinBoxFrom.value()
-        view_dateframe = self.dataframe.iloc[v1:v2, ]
+        view_dateframe = self.dataframe.iloc[v1:v2+1, ]
         self.mycanvas.drawfigure1(view_dateframe)
-        self.mycanvas.dragrect.reset_rects(v1, v2)
         self.ui.labelDays.setText(str(v2 - v1 + 1))
+        if self.ui.buttonK.text() != "K":
+            self.ui.buttonK.setText("K")
+        # if mouse button is pressed in dragerect, then don't draw the dragrect again!!
+        if not self.mycanvas.dragrect.is_pressed():
+            self.mycanvas.dragrect.reset_rects(v1, v2)
+
+    def kButtonClicked(self):
+        if self.dataframe.empty: return
+
+        v1 = self.ui.spinBoxFrom.value()
+        self.ui.labelDateFrom.setText(self.dataframe.index[v1])
+
+        v2 = self.ui.spinBoxTo.value()
+        view_dateframe = self.dataframe.iloc[v1:v2+1, ]
+
+        if self.ui.buttonK.text() == "K":
+            self.mycanvas.drawfigureK(view_dateframe)
+            self.ui.buttonK.setText("L")
+        else:
+            self.mycanvas.drawfigure1(view_dateframe)
+            self.ui.buttonK.setText("K")
+        return
 
 
 if __name__ == '__main__':
