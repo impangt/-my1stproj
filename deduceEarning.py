@@ -13,7 +13,8 @@ def getbuypolicieslist():
 def getsellpolicieslist():
     sellplist = ['stop lossing',
                  'get profits after earning ',
-                 'go down from hight']
+                 'go down from hight',
+                 'cannot go back lossing']
     return sellplist
 
 # read days data from cvs file
@@ -69,11 +70,18 @@ def sellPolicy_getprofits(buypoint, currentprice, uprate):
 def sellPolicy_downfromhight(highpoint, currentprice, downrate):
     if highpoint < currentprice or downrate <= 0:
         return False
-
     elif highpoint > 0:
         c3 = (highpoint - currentprice) / highpoint * 100.0
         if c3 >= downrate:
             return True
+    return False
+
+# s Sell policy4: sell when the price turns down from earning to lossing
+def sellPolicy_cannotgobacklossing(buyprice, highpoint, currentprice):
+    if highpoint < buyprice:
+        return False
+    elif buyprice <= currentprice *(1-mysa.taxes):
+        return True
     return False
 
 def runBackTrace(dataframe, buyplist, sellplist):
@@ -89,29 +97,37 @@ def runBackTrace(dataframe, buyplist, sellplist):
         if mysa.status:  # we can sell
             if mysa.highestpoint < todayhigh:
                 mysa.highestpoint = todayhigh
-            issell = True
+
             t = i
             if len(sellplist) < 3: # if we add policy , then the number should +1
                 return 0
 
             # sell policies frame work
-            if sellPolicy_stoploss(mysa.buyprice, todayclose, mysa.stoplossrate) and sellplist[0]:  # cut loss policy
+            issell = True
+            if sellPolicy_stoploss(mysa.buyprice, todaylow, mysa.stoplossrate) and sellplist[0]:  # cut loss policy
+                sprice = mysa.buyprice*(1.0-mysa.stoplossrate/100)
                 print('sell:stoploss ', dataframe.index[i], end='')
                 i = i + predays - 1  # if sell out today for cut loss, we will not buy in n(predays) days
             elif sellPolicy_getprofits(mysa.buyprice, todayclose, mysa.stopearnrate) and sellplist[1]:  # sell for getting profits
+                sprice = mysa.buyprice * (1.0 - mysa.stopearnrate/100)
                 print('>>>sell:getprofits ', dataframe.index[i], end='')
                 i = i + predays * 2  # if sell out today for cut earning, we will not buy in the next few days
             elif sellPolicy_downfromhight(mysa.highestpoint, todayhigh, mysa.turndownrate) and sellplist[2]:
+                sprice = mysa.highestpoint * (1.0 - mysa.turndownrate / 100)
                 print('sell:downfromhight ', mysa.highestpoint, mysa.turndownrate, dataframe.index[i], end='')
+            elif sellPolicy_cannotgobacklossing(mysa.buyprice, mysa.highestpoint, todaylow) and sellplist[3]:
+                sprice = todaylow * (1.0 + mysa.taxes)
+                print('sell:cannotlossing ', mysa.highestpoint, mysa.turndownrate, dataframe.index[i], end='')
             else:
                 issell = False
+
             if issell:
-                mysa.sellAction((todayhigh + todaylow) / 2)
+                mysa.sellAction(sprice)
                 dayindex = dataframe.index[t]
-                dataframe.at[dayindex, 'sell'] = (todayhigh + todaylow) / 2
+                dataframe.at[dayindex, 'sell'] = sprice
+                print('--sell', mysa.stocks, ' shares at price', dataframe.at[dayindex, 'sell'], ' all money=', mysa.moneyihave)
                 mysa.status = False
                 mysa.stocks = 0
-                print('--', todayopen, mysa.moneyihave)
         else:  # we can buy
             L1 = dataframe.iloc[i - predays:i, 0] # open
             L2 = dataframe.iloc[i - predays:i, 3] # close
@@ -130,15 +146,14 @@ def runBackTrace(dataframe, buyplist, sellplist):
                 mysa.buyAction(mysa.moneyihave, (todayhigh + todaylow) / 2)
                 # dataframe.iloc[i,3] = (todayopen+todayclose)/2
                 dayindex = dataframe.index[i]
-                dataframe.at[dayindex, 'buy'] = (todayopen + todayclose) / 2
+                dataframe.at[dayindex, 'buy'] = (todayhigh + todaylow) / 2
                 mysa.status = True
-                print('buy ', dayindex, todayopen, mysa.stocks * (todayopen + todayclose) / 2 + mysa.moneyihave,
-                      dataframe.loc[dayindex, 'buy'])
+                print(' buy', mysa.stocks, ' shares at price', (todayhigh + todaylow) / 2, ' all money=', mysa.stocks * (todayopen + todayclose) / 2 + mysa.moneyihave)
         i = i + 1
     # caculate the profit in the last day
     lastday = len(dataframe.index)-1
     incomes = dataframe.iloc[lastday, 3] * mysa.stocks*(1-mysa.taxes) + mysa.moneyihave
-    print('----incomes = ', incomes,' tax is ',mysa.taxes, dataframe.iloc[lastday, 3] * mysa.stocks*mysa.taxes,' ---------')
+    print('----incomes =', incomes,' tax is',mysa.taxes, dataframe.iloc[lastday, 3] * mysa.stocks*mysa.taxes,' ---------')
     mysa.accountReset()  # 计算完毕后将账户信息恢复为初始状态，以便再次计算
     return incomes
 

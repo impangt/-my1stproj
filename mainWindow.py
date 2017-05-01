@@ -12,9 +12,10 @@ import drawGraph
 
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from pylab import *
 from matplotlib.widgets import Cursor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtCore import QDate, QDateTime
+from matplotlib.ticker import MultipleLocator
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QDateTimeEdit
 
 
@@ -154,7 +155,7 @@ class MyCanvas(FigureCanvas):
 
         # draw buy points
         for i in range(0, len(l3x)):
-            self.axes.plot(l3x[i], l3y[i], 'r*')
+            self.axes.plot(l3x[i], l3y[i], 'b*')
         # draw sell points
         for i in range(0, len(l4x)):
             self.axes.plot(l4x[i], l4y[i], 'kx')
@@ -213,16 +214,18 @@ class ApplicationWindow(QMainWindow):
             self.setSpinBox(x1, x2)
         elif event.inaxes == self.mycanvas.axes:
             xdata = int(event.xdata)
-            if xdata == 0:
-                print('xdata = ', event.xdata)
-            if (event.xdata > xdata - 0.3) and (event.xdata < xdata + 0.3):
-                cx = xdata + self.ui.spinBoxFrom.value()
-                txt = self.dataframe.index[cx]+" open:" + str(self.dataframe.iloc[cx, 0])\
-                      + " high:" + str(self.dataframe.iloc[cx, 1]) \
-                      + " low:" + str(self.dataframe.iloc[cx, 2]) \
-                      + " close:" + str(self.dataframe.iloc[cx, 3])
-                self.ui.labelX.setText(txt)
-        return
+            # sometimes the event.xdata will over the bundage of the dataframe.
+            if xdata >= self.ui.spinBoxTo.value() - self.ui.spinBoxFrom.value(): return
+
+            cx = xdata + self.ui.spinBoxFrom.value()
+            if event.xdata > xdata + 0.5:
+                cx += 1
+            txt = self.dataframe.index[cx]+" open:" + str(self.dataframe.iloc[cx, 0])\
+                  + " high:" + str(self.dataframe.iloc[cx, 1]) \
+                  + " low:" + str(self.dataframe.iloc[cx, 2]) \
+                  + " close:" + str(self.dataframe.iloc[cx, 3])
+            self.ui.labelX.setText(txt)
+
 
     def openButtonClicked(self):
         self.targetDir, filetype = QFileDialog.getOpenFileName(self,
