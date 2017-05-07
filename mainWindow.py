@@ -25,11 +25,13 @@ class MyCanvas(FigureCanvas):
     def __init__(self, parent=None):
         self.fig = plt.figure(facecolor='lightblue', dpi=100)  # 这里设置figsize没有用！
         # 设置两个绘图区域，图像高度比例为4:1
-        gs = gridspec.GridSpec(2, 1, height_ratios=[4, 1])
-        self.axes = plt.subplot(gs[0])
-        self.axes2 = plt.subplot(gs[1])
+        gs = gridspec.GridSpec(3, 1, height_ratios=[4, 1, 1])
+        self.axes  = plt.subplot(gs[0])
+        self.axes1 = plt.subplot(gs[1])
+        self.axes2 = plt.subplot(gs[2])
         # 设置区域的坐标属性
         self.axes.set_ylabel("day price")
+        self.axes1.set_xticks([])  # 设置图v刻度为空
         self.axes2.set_xticks([])  # 设置图2刻度为空
         self.axes2.set_yticks([])
         # 调整画布的边界
@@ -44,11 +46,9 @@ class MyCanvas(FigureCanvas):
         self.showindicator = True
         self.dragrect = None
 
-    # the scope of zoom rate is [1, 10], 1 = no zoom , 2 = zoom to 90% , 3 = to 80%, ... 10 = 10%
     def drawfigureK(self, dataframe):
         self.axes.clear()  # It's so hard i find this way to clear axes...
         length1 = len(dataframe.index)
-        # print("drawfigure1 len=", length1)
 
         # list the display label of x-axis
         l1 = []
@@ -139,6 +139,26 @@ class MyCanvas(FigureCanvas):
         self.draw()
         return True
 
+    def drawfigureV(self, dataframe):
+        self.axes1.clear()
+
+        length1 = len(dataframe.index)
+        maxv = dataframe.max()
+        print("maxv=",maxv)
+        self.axes1.set_xlim(0, length1)
+        self.axes1.set_ylim(0, maxv)
+        lx = []
+        ly = []
+        w = 500 / length1
+        for i in range(0, length1):
+            lx = [i, i]
+            ly = [i,dataframe.iloc[i, 4] ]
+            self.axes1.plot(lx, ly, linewidth=w, color='#1f77b4')
+
+        self.draw()
+        return True
+
+
     def drawindicator(self, dataframe):
         od = dataframe
         # list all the buy points and sell points
@@ -209,6 +229,7 @@ class ApplicationWindow(QMainWindow):
 
             view_dateframe = self.dataframe.iloc[x1:x2+1, ]
             self.mycanvas.drawfigure1(view_dateframe)
+            self.mycanvas.drawfigureV(view_dateframe)
 
             # set spinBox and labels
             self.setSpinBox(x1, x2)
@@ -258,6 +279,7 @@ class ApplicationWindow(QMainWindow):
 
             # draw the figure1
             self.mycanvas.drawfigure1(view_dateframe)
+            self.mycanvas.drawfigureV(view_dateframe)
 
             # set buttons enable
             self.ui.loadstButton.setDisabled(False)
@@ -266,6 +288,7 @@ class ApplicationWindow(QMainWindow):
     def iniButtonClicked(self):
         self.setSpinBox(0, len(self.dataframe.index) - 1)
         self.mycanvas.drawfigure1(self.dataframe)
+        self.mycanvas.drawfigureV(self.dataframe)
         self.mycanvas.dragrect.reset_rects(0,len(self.dataframe.index) - 1)
 
     def cursorButtonClicked(self):
@@ -309,7 +332,7 @@ class ApplicationWindow(QMainWindow):
         bpl, spl = self.getbuysellpoliceslist()
         view_dateframe = self.dataframe.iloc[view_start:view_end+1, ]
         incomes = dE.runBackTrace(view_dateframe, bpl, spl)
-        # self.mycanvas.drawfigure1(view_dateframe)  # for we can push this button many times.
+        self.mycanvas.drawfigureV(view_dateframe)
         if self.ui.buttonK.text() == "L":
             self.mycanvas.drawfigureK(view_dateframe)
         else:

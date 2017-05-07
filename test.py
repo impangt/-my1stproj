@@ -1,39 +1,17 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
-# Random test data
-np.random.seed(123)
-# all_data = [np.random.normal(0, std, 100) for std in range(1, 4)]
-all_data = [np.random.normal(0, std, 100) for std in range(1, 4)]
+t = np.arange(-1, 2, .01)
+s = np.sin(2*np.pi*t)
 
-fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(9, 4))
+# draw a thick blue vline at x=0 that spans the upper quadrant of
+# the yrange
+# l = plt.axvline(x=1, ymax=1/2, ymin=0.0, linewidth=8, color='#1f77b4')
 
-# rectangular box plot
-bplot1 = axes[0].boxplot(all_data,
-                         vert=True,   # vertical box aligmnent
-                         patch_artist=True)   # fill with color
+lx=[1,1]
+ly=[0,0.6]
+plt.plot(lx, ly, linewidth=8, color='#1f77b4')
 
-# notch shape box plot
-bplot2 = axes[1].boxplot(all_data,
-                         notch=True,  # notch shape
-                         vert=True,   # vertical box aligmnent
-                         patch_artist=True)   # fill with color
-
-# fill with colors
-# colors = ['pink', 'lightblue', 'lightgreen']
-# for bplot in (bplot1, bplot2):
-#     for patch, color in zip(bplot['boxes'], colors):
-#         patch.set_facecolor(color)
-
-# adding horizontal grid lines
-for ax in axes:
-    ax.yaxis.grid(True)
-    ax.set_xticks([y+1 for y in range(len(all_data))], )
-    ax.set_xlabel('xlabel')
-    ax.set_ylabel('ylabel')
-
-# add x-tick labels
-plt.setp(axes, xticks=[y+1 for y in range(len(all_data))],
-         xticklabels=['x1', 'x2', 'x3', 'x4'])
+plt.axis([0, 2, 0, 2])
 
 plt.show()
