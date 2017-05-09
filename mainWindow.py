@@ -60,7 +60,7 @@ class MyCanvas(FigureCanvas):
         for i in np.arange(0, length1, step):
             l1.append(dataframe.index[i])
 
-        self.axes.set_xlim(0, length1)
+        self.axes.set_xlim(0, length1-1)
         self.axes.set_xticks(np.arange(0, length1, step))
         self.axes.set_xticklabels(l1)
 
@@ -99,6 +99,7 @@ class MyCanvas(FigureCanvas):
         self.axes.clear()  # It's so hard i find this way to clear axes...
         length1 = len(dataframe.index)
         viewx = np.arange(0, length1, 1)
+        # print("length = ", length1, 'viewx=', viewx)
 
         # list the display label of x-axis
         l1 = []
@@ -110,14 +111,14 @@ class MyCanvas(FigureCanvas):
         for i in np.arange(0, length1, step):
             l1.append(dataframe.index[i])
 
-        self.axes.set_xlim(0, length1 - 1)
+        self.axes.set_xlim(0, length1-1)
         self.axes.set_xticks(np.arange(0, length1, step))
         self.axes.set_xticklabels(l1)
 
         y1 = dataframe.iloc[:, 0] # open price
         # y2 = dataframe.iloc[:, 3] # close price
 
-        self.axes.plot(viewx, y1, 'c') #color='c'
+        self.axes.plot(viewx, y1, 'c')
         # self.axes.plot(viewx, y2, 'b')
 
         self.axes.grid()
@@ -139,25 +140,39 @@ class MyCanvas(FigureCanvas):
         self.draw()
         return True
 
+    # ## this method is too slow
+    # def drawfigureV2(self, dataframe):
+    #     self.axes1.clear()
+    #     data = dataframe['vol']
+    #     data.plot(kind='bar', ax=self.axes1, color='g', alpha=0.7)
+    #     return True
+
     def drawfigureV(self, dataframe):
         self.axes1.clear()
 
         length1 = len(dataframe.index)
-        maxv = dataframe.max()
-        print("maxv=",maxv)
-        self.axes1.set_xlim(0, length1)
+        maxv = int(dataframe.iloc[:, 4].max()/10000)
+        # print("maxv=",maxv)
+
+        self.axes1.set_xlim(0, length1-1)
         self.axes1.set_ylim(0, maxv)
         lx = []
         ly = []
         w = 500 / length1
         for i in range(0, length1):
+            openp = dataframe.iloc[i, 0]
+            closep = dataframe.iloc[i, 3]
+
             lx = [i, i]
-            ly = [i,dataframe.iloc[i, 4] ]
-            self.axes1.plot(lx, ly, linewidth=w, color='#1f77b4')
+            ly = [0, int(dataframe.iloc[i, 4]/10000)]
+            if closep < openp:
+                col = 'g'
+            else:
+                col = 'r'
+            self.axes1.plot(lx, ly, col, linewidth=w)
 
         self.draw()
         return True
-
 
     def drawindicator(self, dataframe):
         od = dataframe
@@ -176,9 +191,12 @@ class MyCanvas(FigureCanvas):
         # draw buy points
         for i in range(0, len(l3x)):
             self.axes.plot(l3x[i], l3y[i], 'b*')
+            self.axes.annotate('buy', xy=(l3x[i], l3y[i]+0.5), xytext=(l3x[i], l3y[i]+2), arrowprops=dict(facecolor='lightblue', shrink=0.1), horizontalalignment='center')
+            # self.axes.annotate('buy', xy=(l3x[i], l3y[i], sh), xytext=(3, 1.5), arrowprops=dict(facecolor='black'), horizontalalignment='left', verticalalignment='top')
         # draw sell points
         for i in range(0, len(l4x)):
             self.axes.plot(l4x[i], l4y[i], 'kx')
+            self.axes.annotate('sell', xy=(l4x[i], l4y[i]-0.5), xytext=(l4x[i], l4y[i]-2.2), arrowprops=dict(facecolor='lightyellow', shrink=0.1), horizontalalignment='center')
 
         self.draw()
 
@@ -225,14 +243,16 @@ class ApplicationWindow(QMainWindow):
 
             # set data frame according to the drag rectangle datas
             x1 = self.mycanvas.dragrect.get_rect_x1()
-            x2 = self.mycanvas.dragrect.get_rect_x2()
-
-            view_dateframe = self.dataframe.iloc[x1:x2+1, ]
-            self.mycanvas.drawfigure1(view_dateframe)
-            self.mycanvas.drawfigureV(view_dateframe)
+            x2 = self.mycanvas.dragrect.get_rect_x2() + 1
 
             # set spinBox and labels
             self.setSpinBox(x1, x2)
+
+            view_dateframe = self.dataframe.iloc[x1:x2+1, ]
+            # print("x1=",x1, "x2 = ", x2)
+            self.mycanvas.drawfigure1(view_dateframe)
+            self.mycanvas.drawfigureV(view_dateframe)
+
         elif event.inaxes == self.mycanvas.axes:
             xdata = int(event.xdata)
             # sometimes the event.xdata will over the bundage of the dataframe.
@@ -268,14 +288,14 @@ class ApplicationWindow(QMainWindow):
 
             # set data frame according to the drag rectangle datas
             x1 = self.mycanvas.dragrect.get_rect_x1()
-            x2 = self.mycanvas.dragrect.get_rect_x2()
-            view_dateframe = self.dataframe.iloc[x1:x2+1, ] # be careful the bundage
+            x2 = self.mycanvas.dragrect.get_rect_x2() + 1
+            view_dateframe = self.dataframe.iloc[x1:x2, ] # be careful the bundage
             # print('view_dataframe ---',x1, x2, self.dataframe.index[-1])
 
             # set the spinBox and labels
             self.ui.spinBoxFrom.setMaximum(len(self.dataframe.index) - 6)
             self.ui.spinBoxTo.setMaximum(len(self.dataframe.index) - 1)
-            self.setSpinBox(x1, x2)
+            self.setSpinBox(x1, x2-1)
 
             # draw the figure1
             self.mycanvas.drawfigure1(view_dateframe)
@@ -297,6 +317,7 @@ class ApplicationWindow(QMainWindow):
         if tx == "+":
             if self.cursor == None:
                 self.cursor = Cursor(self.mycanvas.axes, useblit=True, color='red', linewidth=1)
+
             self.cursor.visible = True
             self.mycanvas.draw()
             self.ui.buttonCursor.setText("-")
