@@ -16,6 +16,7 @@ from pylab import *
 from matplotlib.widgets import Cursor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.ticker import MultipleLocator
+from matplotlib.widgets import MultiCursor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QDateTimeEdit
 
 
@@ -178,26 +179,25 @@ class MyCanvas(FigureCanvas):
         od = dataframe
         # list all the buy points and sell points
         length = len(od.index)
-        l3x, l3y = [], []
-        l4x, l4y = [], []
+        l3x, l3y,l3z, l4x, l4y,l4z = [], [], [],[], [], []
         for n in range(0, length):
             if od.iloc[n, 6] != 0: # buy colunm
                 l3x.append(n)
-                l3y.append(od.iloc[n, 6])
+                l3y.append(od.iloc[n, 6])# buy price
+                l3z.append(od.iloc[n, 1])# highest price
             if od.iloc[n, 7] != 0: # sell colunm
                 l4x.append(n)
-                l4y.append(od.iloc[n, 7])
+                l4y.append(od.iloc[n, 7])# sell price
+                l4z.append(od.iloc[n, 2])# lowest price
 
-        # draw buy points
+            # draw buy points
         for i in range(0, len(l3x)):
             self.axes.plot(l3x[i], l3y[i], 'b*')
-            self.axes.annotate('buy', xy=(l3x[i], l3y[i]+0.5), xytext=(l3x[i], l3y[i]+2), arrowprops=dict(facecolor='lightblue', shrink=0.1), horizontalalignment='center')
-            # self.axes.annotate('buy', xy=(l3x[i], l3y[i], sh), xytext=(3, 1.5), arrowprops=dict(facecolor='black'), horizontalalignment='left', verticalalignment='top')
+            self.axes.annotate('', xy=(l3x[i], l3z[i]), xytext=(l3x[i], l3z[i]+0.3), arrowprops=dict(facecolor='b', shrink=1), horizontalalignment='center')
         # draw sell points
         for i in range(0, len(l4x)):
             self.axes.plot(l4x[i], l4y[i], 'kx')
-            self.axes.annotate('sell', xy=(l4x[i], l4y[i]-0.5), xytext=(l4x[i], l4y[i]-2.2), arrowprops=dict(facecolor='lightyellow', shrink=0.1), horizontalalignment='center')
-
+            self.axes.annotate('', xy=(l4x[i], l4z[i]), xytext=(l4x[i], l4z[i]-0.3), arrowprops=dict(facecolor='r', shrink=1), horizontalalignment='center')
         self.draw()
 
 class ApplicationWindow(QMainWindow):
@@ -220,8 +220,7 @@ class ApplicationWindow(QMainWindow):
 
         self.dataframe = pd.DataFrame()
         self.pdfile = 'config\\policyselections'
-        self.cursor = None
-
+        self.multicursor = None
 
     def on_mousebutton_press(self, event):
         if event.inaxes != self.mycanvas.axes2: return
@@ -266,7 +265,8 @@ class ApplicationWindow(QMainWindow):
                   + " low:" + str(self.dataframe.iloc[cx, 2]) \
                   + " close:" + str(self.dataframe.iloc[cx, 3])
             self.ui.labelX.setText(txt)
-
+            # self.mycanvas.axes1.lines = [self.mycanvas.axes1.lines[0]]
+            # self.mycanvas.axes1.axvline(x=event.xdata, color="k")
 
     def openButtonClicked(self):
         self.targetDir, filetype = QFileDialog.getOpenFileName(self,
@@ -316,9 +316,8 @@ class ApplicationWindow(QMainWindow):
         tx = self.ui.buttonCursor.text()
         if tx == "+":
             if self.cursor == None:
-                self.cursor = Cursor(self.mycanvas.axes, useblit=True, color='red', linewidth=1)
+                self.multicursor = MultiCursor(self.mycanvas, (self.mycanvas.axes, self.mycanvas.axes1), horizOn=True, color='r', lw=0.5)
 
-            self.cursor.visible = True
             self.mycanvas.draw()
             self.ui.buttonCursor.setText("-")
         elif tx == '-':

@@ -109,7 +109,7 @@ def runBackTrace(dataframe, buyplist, sellplist):
                 print('sell:stoploss ', dataframe.index[i], end='')
                 i = i + predays - 1  # if sell out today for cut loss, we will not buy in n(predays) days
             elif sellPolicy_getprofits(mysa.buyprice, todayclose, mysa.stopearnrate) and sellplist[1]:  # sell for getting profits
-                sprice = mysa.buyprice * (1.0 - mysa.stopearnrate/100)
+                sprice = mysa.buyprice * (1.0 + mysa.stopearnrate/100)
                 print('>>>sell:getprofits ', dataframe.index[i], end='')
                 i = i + predays * 2  # if sell out today for cut earning, we will not buy in the next few days
             elif sellPolicy_downfromhight(mysa.highestpoint, todayhigh, mysa.turndownrate) and sellplist[2]:
@@ -160,9 +160,9 @@ def runBackTrace(dataframe, buyplist, sellplist):
 # originData = readDailyData('data\\SH#603588.txt')
 # originData['buy'] = 0.0
 # originData['sell'] = 0.0
-# dataframe = originData.iloc[0:20,]
-# buypl = [1,1]
-# sellpl = [1,1,1]
+# dataframe = originData.iloc[499:567,]
+# buypl = [1,0]
+# sellpl = [1,1,1,0]
 # # print(dataframe.head(5))
 # incomes = runBackTrace(dataframe,buypl,sellpl)
 # print(dataframe)
