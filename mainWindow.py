@@ -220,7 +220,9 @@ class ApplicationWindow(QMainWindow):
 
         self.dataframe = pd.DataFrame()
         self.pdfile = 'config\\policyselections'
-        self.multicursor = None
+        self.multicursor = MultiCursor(self.mycanvas, (self.mycanvas.axes, self.mycanvas.axes1), horizOn=True,
+                                       color='r', lw=0.5)
+        self.ui.buttonCursor.setText("-")
 
     def on_mousebutton_press(self, event):
         if event.inaxes != self.mycanvas.axes2: return
@@ -312,17 +314,14 @@ class ApplicationWindow(QMainWindow):
         self.mycanvas.dragrect.reset_rects(0,len(self.dataframe.index) - 1)
 
     def cursorButtonClicked(self):
-        # self.mycanvas.mpl_disconnect('motion_notify_event')
         tx = self.ui.buttonCursor.text()
         if tx == "+":
-            if self.cursor == None:
-                self.multicursor = MultiCursor(self.mycanvas, (self.mycanvas.axes, self.mycanvas.axes1), horizOn=True, color='r', lw=0.5)
-
-            self.mycanvas.draw()
+            self.multicursor.visible = True
             self.ui.buttonCursor.setText("-")
         elif tx == '-':
-            self.cursor.visible = False
+            self.multicursor.visible = False
             self.ui.buttonCursor.setText("+")
+        self.mycanvas.draw()
 
     def applyButtonClicked(self):
         pdlg = PoliciesDialog()
