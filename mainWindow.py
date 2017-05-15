@@ -50,6 +50,7 @@ class MyCanvas(FigureCanvas):
     def drawfigureK(self, dataframe):
         self.axes.clear()  # It's so hard i find this way to clear axes...
         length1 = len(dataframe.index)
+        if length1 == 0: return False
 
         # list the display label of x-axis
         l1 = []
@@ -99,6 +100,8 @@ class MyCanvas(FigureCanvas):
     def drawfigure1(self, dataframe):
         self.axes.clear()  # It's so hard i find this way to clear axes...
         length1 = len(dataframe.index)
+        if length1 == 0: return False
+
         viewx = np.arange(0, length1, 1)
         # print("length = ", length1, 'viewx=', viewx)
 
@@ -131,6 +134,7 @@ class MyCanvas(FigureCanvas):
         self.axes2.clear()
 
         length1 = len(dataframe.index)
+        if length1 == 0: return False
 
         viewx = np.arange(0, length1, 1)
         y = dataframe.iloc[:, 0]
@@ -152,9 +156,9 @@ class MyCanvas(FigureCanvas):
         self.axes1.clear()
 
         length1 = len(dataframe.index)
-        maxv = int(dataframe.iloc[:, 4].max()/10000)
-        # print("maxv=",maxv)
+        if length1 == 0: return False
 
+        maxv = int(dataframe.iloc[:, 4].max()/10000)
         self.axes1.set_xlim(0, length1-1)
         self.axes1.set_ylim(0, maxv)
         lx = []
@@ -171,7 +175,6 @@ class MyCanvas(FigureCanvas):
             else:
                 col = 'r'
             self.axes1.plot(lx, ly, col, linewidth=w)
-
         self.draw()
         return True
 
@@ -247,12 +250,12 @@ class ApplicationWindow(QMainWindow):
             x2 = self.mycanvas.dragrect.get_rect_x2() + 1
 
             # set spinBox and labels
+            # because setSpinBox() include the drawfigureX methods ,we don't need to draw them again as below.
             self.setSpinBox(x1, x2)
-
-            view_dateframe = self.dataframe.iloc[x1:x2+1, ]
+            # view_dateframe = self.dataframe.iloc[x1:x2+1, ]
             # print("x1=",x1, "x2 = ", x2)
-            self.mycanvas.drawfigure1(view_dateframe)
-            self.mycanvas.drawfigureV(view_dateframe)
+            # self.mycanvas.drawfigure1(view_dateframe)
+            # self.mycanvas.drawfigureV(view_dateframe)
 
         elif event.inaxes == self.mycanvas.axes:
             xdata = int(event.xdata)
@@ -299,18 +302,12 @@ class ApplicationWindow(QMainWindow):
             self.ui.spinBoxTo.setMaximum(len(self.dataframe.index) - 1)
             self.setSpinBox(x1, x2-1)
 
-            # draw the figure1
-            self.mycanvas.drawfigure1(view_dateframe)
-            self.mycanvas.drawfigureV(view_dateframe)
-
             # set buttons enable
             self.ui.loadstButton.setDisabled(False)
             self.ui.iniButton.setDisabled(False)
 
     def iniButtonClicked(self):
         self.setSpinBox(0, len(self.dataframe.index) - 1)
-        self.mycanvas.drawfigure1(self.dataframe)
-        self.mycanvas.drawfigureV(self.dataframe)
         self.mycanvas.dragrect.reset_rects(0,len(self.dataframe.index) - 1)
 
     def cursorButtonClicked(self):
@@ -388,6 +385,7 @@ class ApplicationWindow(QMainWindow):
 
     def fromOneDayChanged(self):
         if self.dataframe.empty: return
+        print('from one day changed.')
 
         v1 = self.ui.spinBoxFrom.value()
         self.ui.labelDateFrom.setText(self.dataframe.index[v1])
@@ -395,6 +393,7 @@ class ApplicationWindow(QMainWindow):
         v2 = self.ui.spinBoxTo.value()
         view_dateframe = self.dataframe.iloc[v1:v2+1, ]
         self.mycanvas.drawfigure1(view_dateframe)
+        self.mycanvas.drawfigureV(view_dateframe)
         self.ui.labelDays.setText(str(v2 - v1 + 1) + ' Days')
         if self.ui.buttonK.text() != "K":
             self.ui.buttonK.setText("K")
@@ -404,12 +403,14 @@ class ApplicationWindow(QMainWindow):
 
     def toOneDayChanged(self):
         if self.dataframe.empty: return
+        print('to one day changed.')
 
         v2 = self.ui.spinBoxTo.value()
         self.ui.labelDateTo.setText(self.dataframe.index[v2])
         v1 = self.ui.spinBoxFrom.value()
         view_dateframe = self.dataframe.iloc[v1:v2+1, ]
         self.mycanvas.drawfigure1(view_dateframe)
+        self.mycanvas.drawfigureV(view_dateframe)
         self.ui.labelDays.setText(str(v2 - v1 + 1))
         if self.ui.buttonK.text() != "K":
             self.ui.buttonK.setText("K")
